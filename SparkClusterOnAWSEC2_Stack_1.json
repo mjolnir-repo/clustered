@@ -1,0 +1,186 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description" : "This template is used to create Stack for SparkClusterUsingAWSEC2 utility.",
+	"Parameters" : {
+		"SparkClusterCIDR" : {
+			"Description": "Provide the IP4 CIDR block that will be used by the VPC.",
+			"Type": "String",
+			"AllowedPattern" : "[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}/[0-9]{1,3}"
+		},
+		"SparkClusterSubnetCIDR1" : {
+			"Description": "Provide the Segment of the VPC CIDR block for first Subnet.",
+			"Type": "String",
+			"AllowedPattern" : "[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}/[0-9]{1,3}"
+		},
+		"SparkClusterSubnetCIDR2" : {
+			"Description": "Provide the Segment of the VPC CIDR block for second Subnet.",
+			"Type": "String",
+			"AllowedPattern" : "[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}/[0-9]{1,3}"
+		},
+		"SparkClusterSubnetAZ1" : {
+			"Description": "Provide one availability zone of used region for first subnet.",
+			"Type": "String",
+			"AllowedPattern" : "[a-zA-Z0-9-]+"
+		},
+		"SparkClusterSubnetAZ2" : {
+			"Description": "Provide one availability zone of used region for second subnet.",
+			"Type": "String",
+			"AllowedPattern" : "[a-zA-Z0-9-]+"
+		},
+		"SparkClusterWhitelistIP" : {
+			"Description": "Provide the Ip of the servers to be whitelisted to the cluster.",
+			"Type": "String",
+			"AllowedPattern" : "[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}/[0-9]{1,3}"
+		}
+	},
+	"Resources" : {
+		"SparkClusterVPC" : {
+			"Type" : "AWS::EC2::VPC",
+			"Properties" : {
+				"CidrBlock" : {
+					"Ref" : "SparkClusterCIDR"
+				},
+				"EnableDnsHostnames" : true,
+				"EnableDnsSupport" : true,
+				"Tags" : [
+					{
+					   "Key" : "Project",
+					   "Value" : "SparkCluster"
+					},
+					{
+					   "Key" : "Name",
+					   "Value" : "SparkClusterVPC"
+					}
+				]
+			}
+		},
+		"SparkClusterSubnet1" : {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : {
+					"Ref" : "SparkClusterSubnetAZ1"
+				},
+				"CidrBlock" : {
+					"Ref" : "SparkClusterSubnetCIDR1"
+				},
+				"MapPublicIpOnLaunch" : true,
+				"Tags" : [
+					{
+					   "Key" : "Project",
+					   "Value" : "SparkCluster"
+					},
+					{
+					   "Key" : "Name",
+					   "Value" : "SparkClusterSubnet1"
+					}
+				],
+				"VpcId" : {
+					"Ref" : "SparkClusterVPC"
+				}
+			}
+		},
+		"SparkClusterSubnet2" : {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : {
+					"Ref" : "SparkClusterSubnetAZ2"
+				},
+				"CidrBlock" : {
+					"Ref" : "SparkClusterSubnetCIDR2"
+				},
+				"MapPublicIpOnLaunch" : true,
+				"Tags" : [
+					{
+					   "Key" : "Project",
+					   "Value" : "SparkCluster"
+					},
+					{
+					   "Key" : "Name",
+					   "Value" : "SparkClusterSubnet2"
+					}
+				],
+				"VpcId" : {
+					"Ref" : "SparkClusterVPC"
+				}
+			}
+		},
+		"SparkClusterSecurityGroup" : {
+			"Type" : "AWS::EC2::SecurityGroup",
+			"Properties" : {
+				"GroupDescription" : "This securty group will filter inbound and outbound traffic to the cluster.",
+				"GroupName" : "SparkClusterSecurityGroup",
+				"Tags" : [
+					{
+					   "Key" : "Project",
+					   "Value" : "SparkCluster"
+					},
+					{
+					   "Key" : "Name",
+					   "Value" : "SparkClusterVPC"
+					}
+				],
+				"VpcId" : {
+					"Ref" : "SparkClusterVPC"
+				}
+			}
+		},
+		"SparkClusterSGIngress1": {
+			"Type": "AWS::EC2::SecurityGroupIngress",
+			"Properties": {
+				"GroupId": { 
+					"Ref": "SparkClusterSecurityGroup"
+				},
+				"IpProtocol": "-1",
+				"FromPort": "-1",
+				"ToPort": "-1",
+				"CidrIp": {
+					"Fn::GetAtt" : [ "SparkClusterVPC", "CidrBlock" ]
+				}
+			}
+		},
+		"SparkClusterSGIngress2": {
+			"Type": "AWS::EC2::SecurityGroupIngress",
+			"Properties": {
+				"GroupId": { 
+					"Ref": "SparkClusterSecurityGroup"
+				},
+				"IpProtocol": "-1",
+				"FromPort": "-1",
+				"ToPort": "-1",
+				"CidrIp": {
+					"Ref" : "SparkClusterWhitelistIP"
+				}
+			}
+		},
+		"SparkClusterSGEgress": {
+			"Type": "AWS::EC2::SecurityGroupEgress",
+			"Properties": {
+				"GroupId": { 
+					"Ref": "SparkClusterSecurityGroup"
+				},
+				"IpProtocol": "-1",
+				"FromPort": "-1",
+				"ToPort": "-1",
+				"CidrIp": "0.0.0.0/0"
+			}
+		}
+	},
+	"Outputs" : {
+		"VPCId" : {
+			"Description": "The VPC ID",  
+			"Value" : { "Ref" : "SparkClusterVPC" }
+		},
+		"SubnetId1" : {
+			"Description": "The Subnet ID",  
+			"Value" : { "Ref" : "SparkClusterSubnet1" }
+		},
+		"SubnetId2" : {
+			"Description": "The Subnet ID",  
+			"Value" : { "Ref" : "SparkClusterSubnet2" }
+		},
+		"SecurityGroupId" : {
+			"Description": "The Security Group ID",  
+			"Value" : { "Ref" : "SparkClusterSecurityGroup" }
+		}
+	}
+}
