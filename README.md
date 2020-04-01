@@ -1,9 +1,10 @@
+
 # SparkClusterOnAWSEC2
 ### An automated Spark Cluster on AWS EC2 instances.
 
 ## 1. Introduction:
 First thing first, this utility is not to be used as a permanent business solution to create and manage a Spark cluster in any production (nor DEV in industry in that matter). Then the obvious question is why am I wasting your time?
-To answer that, let me ask a simpler question, Do you ever feel like, __"*it would be great if you had an Spark cluster that can be turned on and off based on requirement to run your late night spark POC codes*"__? If Yes, then you are in the right place, or else you can happily skip the entire article and I promise you will not miss out on much in your life.
+To answer that, let me ask a simpler question, Do you ever feel like, __"*it would be great if you had a Spark cluster that can be turned on and off based on requirement to run your late night spark POC codes*"__? If Yes, then you are in the right place, or else you can happily skip the entire article and I promise you will not miss out on much in your life.
 
 Now having the biggest confusion (__Is this another tutorial? - NOOOOOOO__), let's see how this can help your craving of having a small(big is also possible) and simple(complicated is also an option if you are ready to do a bit more) cluster.
 
@@ -46,7 +47,7 @@ To use SparkClusterOnAWSEC2 utility following points must be checked. These are 
 1. Create AWS account, not required if already have one (https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account).
 2. Create one IAM user having full access to EC2, Cloudformation, VPC, S3 (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
 3. Install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html).
-3. Configure the IAM user in AWS CLI.(https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
+4. Configure the IAM user in AWS CLI.(https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
 5. Have One AMI with all required software(spark, python, ssh) installed in it (Refer to AMI creation step 3.1).
 6. Make sure SSH is available or install the same.
 
@@ -59,8 +60,8 @@ Okay, boring part is over. If you are still with me that means you really need a
 In this step we will create one AMI(Amazon Machine Image) that will be used as base image for each node. If you wish to install any other softwares in each node or want to do any configurations, I suggest you do those in this image. Here we will do follwoing steps:
 1. Launch an EC2 instance using Amazon Linux 2 AMI(https://docs.aws.amazon.com/quickstarts/latest/vmlaunch/step-1-launch-instance.html). Make sure the instance is launched with an public DNS.
 2. Login into the EC2 instance using the public DNS (https://docs.aws.amazon.com/quickstarts/latest/vmlaunch/step-2-connect-to-instance.html).
-2. Run following commands:
-    - #### Update all existing libraries:
+3. Run following commands:
+    * #### Update all existing libraries:
         - _sudo yum update -y_
 
     - #### Install Java 8:
@@ -77,8 +78,8 @@ In this step we will create one AMI(Amazon Machine Image) that will be used as b
         - _sudo tar -zxvf spark-2.4.5-bin-hadoop2.7.tgz_
 
     __Please note__, to use PySpark, Install Python 3.7, pip3, py4j and findspark after these steps.
-3. Create an AMI from this EC2(https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/tkv-create-ami-from-instance.html). Please use proper ProjectName tag (provide the same ProjectName in configuration file in next section), or else it will not be visible to utility.
-4. Terminate the EC2 instance.
+4. Create an AMI from this EC2(https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/tkv-create-ami-from-instance.html). Please use proper ProjectName tag (provide the same ProjectName in configuration file in next section), or else it will not be visible to utility.
+5. Terminate the EC2 instance.
 
 __*N.B.* This is a one time activity. Once an AMI is created. It can be re-used for each run.__
 ### 3.2. Cluster Configuration:
