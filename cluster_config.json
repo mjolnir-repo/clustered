@@ -1,0 +1,13 @@
+{
+    "Region" : "us-east-1",
+    "AZList" : ["us-east-1a", "us-east-1b", "us-east-1c"],
+    "CidrBlock" : "172.172.0.0/16",
+    "KeyPairPath" : "/Volumes/WorkSpace/AWS/Access_Keys",
+    "KeyPairName" : "SparkCluster",
+    "ProjectTag" : "SparkCluster",
+    "IPWhitelist" : ["103.77.137.192", "192.168.247.1", "52.90.143.85"],
+    "UserName" : "ccbp-dev-user-saumalya",
+    "InstanceType" : "t2.micro",
+    "WorkspaceDirectory" : "/Volumes/WorkSpace/POC/SparkClusterEC2/WrkSpc",
+    "SlaveCount" : 3
+}
