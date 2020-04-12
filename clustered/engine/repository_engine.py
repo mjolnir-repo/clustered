@@ -34,6 +34,7 @@ class RepositoryEngine:
             with db_obj.session_scope() as session:
                 repo_obj = Repository(
                     REPO_NAME=repo_name.upper(),
+                    #TO DO: Encrypt the keys
                     REPO_ACCESS_KEY_ENCRYPTED=aws_access_key,
                     REPO_SECRET_KEY_ENCRYPTED=aws_secret_key,
                     REPO_REGION=aws_region,

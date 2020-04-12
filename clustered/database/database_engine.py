@@ -1,3 +1,4 @@
+import sys
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -19,6 +20,7 @@ class DatabaseEngine:
             print("ERROR: Exception occured while database session was open.")
             print(str(e))
             session.rollback()
+            sys.exit(1)
         else:
             print("INFO: Database operations completed successfully.")
             session.commit()

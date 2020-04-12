@@ -44,7 +44,7 @@ def create_repository(repo_name, **kwargs):
 		aws_access_key = kwargs['aws_access_key']
 		aws_secret_key = click.prompt("AWS Secret Key", hide_input=True)
 	else:
-		aws_secret_key = ''
+		aws_access_key = ''
 		aws_secret_key = ''
 
 	if kwargs.get('aws_region', ''):
