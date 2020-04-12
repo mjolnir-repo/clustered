@@ -14,6 +14,7 @@ class Repository(Base):
     REPO_DESC = Column(String(1000), nullable=True)
     REPO_ACCESS_KEY_ENCRYPTED = Column(String(50), nullable=False)
     REPO_SECRET_KEY_ENCRYPTED = Column(String(50), nullable=False)
+    REPO_REGION = Column(String(20), nullable=False)
     REPO_VPC_ID = Column(String(50), nullable=True)
     REPO_SUBNET_LIST = Column(String(100), nullable=True)
     REPO_STATE = Column(String(10), nullable=False)
@@ -28,7 +29,8 @@ class Repository(Base):
             REPO_NAME = {self.REPO_NAME},
             REPO_DESC = {self.REPO_DESC},
             REPO_ACCESS_KEY_ENCRYPTED = {self.REPO_ACCESS_KEY_ENCRYPTED},
-            REPO_SECRET_KEY_ENCRYPTED = {self.REPO_SECRET_KEY_ENCRYPTED}, 
+            REPO_SECRET_KEY_ENCRYPTED = {self.REPO_SECRET_KEY_ENCRYPTED},
+            REPO_SECRET_KEY_ENCRYPTED = {self.REPO_REGION},
             REPO_VPC_ID = {self.REPO_VPC_ID},
             REPO_SUBNET_LIST = {self.REPO_SUBNET_LIST},
             REPO_STATE = {self.REPO_STATE},
