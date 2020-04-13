@@ -4,6 +4,7 @@ import click
 import pprint
 from clustered.env import env
 from clustered.engine.repository_engine import RepositoryEngine
+from clustered.engine.encryptor_engine import EncryptorEngine
 from clustered.database import db_obj
 from clustered.models import Base
 
@@ -26,20 +27,120 @@ Happy Clustering!!!
 def clustered_cli():
 	pass
 
+
+###################################### Database CLI Commands ######################################
+
 @click.command('setup-db')
 def setup_database():
 	force = click.prompt("DEBUG:Do you really want to setup empty database(Y/N)?", type=str)
 	if force.lower() == 'y':
 		Base.metadata.create_all(db_obj.db_engine)
-		click.echo("INFO: Database set up completed.")
+		click.echo("INFO: Database set up is completed.")
 	else:
-		click.echo("INFO: Database set up cancelled.")
+		click.echo("INFO: Database set up is cancelled.")
 
-@click.command('create-repo')
+
+@click.command('cleanup-db')
+def cleanup_database():
+	force = click.prompt("DEBUG:Do you really want to drop all tables from database(Y/N)?", type=str)
+	if force.lower() == 'y':
+		Base.metadata.drop_all(db_obj.db_engine)
+		click.echo("INFO: Database clean up is completed.")
+	else:
+		click.echo("INFO: Database set up is cancelled.")
+
+
+clustered_cli.add_command(setup_database)
+clustered_cli.add_command(cleanup_database)
+
+
+###################################### Encryptor CLI Commands ######################################
+
+@click.command('get-enc-by-name')
+@click.argument('enc_name', type=str, nargs=1)
+def get_encryptor_by_name(enc_name):
+	try:
+		resp = EncryptorEngine.get_encryptor_by_name(enc_name)
+		click.echo(resp)
+	except Exception as e:
+		click.echo("ERROR: Exception occured while extracting requested encryptor: " + str(e))
+
+
+@click.command('ls-enc')
+def list_encryptors():
+	try:
+		resp = EncryptorEngine.list_encryptors()
+		click.echo(resp)
+	except Exception as e:
+		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
+
+
+@click.command('add-enc')
+@click.argument('enc_name', type=str, nargs=1)
+def add_encryptor(enc_name):
+	try:
+		resp = EncryptorEngine.add_encryptor(enc_name)
+		if resp:
+			click.echo("INFO: Encryptor is added successfully.")
+		else:
+			raise Exception("Encryption could not be added successfully.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
+
+
+@click.command('delete-enc')
+@click.argument('enc_name', type=str, nargs=1)
+def delete_encryptor(enc_name):
+	force = click.prompt("Are you sure to delete '" + enc_name + "' encryptor(Y/N)?")
+	if force:
+		response = EncryptorEngine.delete_encryptor(enc_name)
+		if response:
+			click.echo("INFO: '" + enc_name + "' is deleted successfully.")
+		else:
+			click.echo("ERROR: '" + enc_name + "' is not deleted successfully.")
+	else:
+		click.echo("ERROR: Delete operation is skipped.")
+
+
+@click.command('purge-enc-all')
+def purge_all_encryptors():
+	force = click.prompt("Do you want to clear all encryptors(Y/N)?")
+	if force:
+		response = EncryptorEngine.purge_all_encryptors()
+		if response:
+			click.echo("INFO: All encryptors are purged successfully.")
+		else:
+			click.echo("ERROR: All encryptors are not purged successfully.")
+	else:
+		click.echo("ERROR: Purge operation is skipped.")
+
+
+
+clustered_cli.add_command(get_encryptor_by_name)
+clustered_cli.add_command(list_encryptors)
+clustered_cli.add_command(add_encryptor)
+clustered_cli.add_command(delete_encryptor)
+clustered_cli.add_command(purge_all_encryptors)
+
+
+###################################### Repository CLI Commands ######################################
+
+@click.command('get-repo-by-name')
 @click.argument('repo_name', type=str, nargs=1)
+def get_repository_by_name(repo_name):
+	try:
+		resp = RepositoryEngine.get_repository_by_name(repo_name)
+		click.echo(resp)
+	except Exception as e:
+		click.echo("ERROR: Exception occured while extracting requested encryptor: " + str(e))
+
+
+@click.command('add-repo')
+@click.argument('repo_name', type=str, nargs=1)
+@click.argument('enc_name', type=str, nargs=1)
 @click.option('-a', '--aws-access-key', 'aws_access_key', default='', help="Optional access key of AWS account, if not provided, env value will be used.")
 @click.option('-r', '--aws-region', 'aws_region', default='', help="Optional region of AWS account, if not provided, env value will be used.")
-def create_repository(repo_name, **kwargs):
+def add_repository(repo_name, enc_name, **kwargs):
 	if kwargs.get('aws_access_key', ''):
 		aws_access_key = kwargs['aws_access_key']
 		aws_secret_key = click.prompt("AWS Secret Key", hide_input=True)
@@ -52,41 +153,55 @@ def create_repository(repo_name, **kwargs):
 	else:
 		aws_region = ''
 
-	response = RepositoryEngine.create_repository(repo_name, aws_access_key, aws_secret_key, aws_region)
+	response = RepositoryEngine.create_repository(repo_name, enc_name, aws_access_key, aws_secret_key, aws_region)
 	if response:
 		click.echo("INFO: '" + repo_name + "' is created successfully.")
 	else:
 		click.echo("ERROR: '" + repo_name + "' is not created successfully.")
+
 
 @click.command('ls-repos')
 def get_repository_list():
 	resp = RepositoryEngine.list_repositories()
 	print(resp)
 
+
 @click.command('delete-repo')
 @click.argument('repo_name', type=str, nargs=1)
 def delete_repository(repo_name):
-	response = RepositoryEngine.delete_repository(repo_name)
-	if response:
-		click.echo("INFO: '" + repo_name + "' is deleted successfully.")
+	force = click.prompt("Are you sure to delete '" + repo_name + "' repository(Y/N)?")
+	if force:
+		response = RepositoryEngine.delete_repository(repo_name)
+		if response:
+			click.echo("INFO: '" + repo_name + "' is deleted successfully.")
+		else:
+			click.echo("ERROR: '" + repo_name + "' is not deleted successfully.")
 	else:
-		click.echo("ERROR: '" + repo_name + "' is not deleted successfully.")
+		click.echo("ERROR: Delete operation is skipped.")
 
-@click.command('delete-repo-all')
-def delete_repository_all():
-	response = RepositoryEngine.delete_repository_all()
-	if response:
-		click.echo("INFO: All repositories are deleted successfully.")
+
+@click.command('purge-repo-all')
+def purge_all_repositories():
+	force = click.prompt("Do you want to clear all repositories(Y/N)?")
+	if force:
+		response = RepositoryEngine.purge_all_repositories()
+		if response:
+			click.echo("INFO: All repositories are purged successfully.")
+		else:
+			click.echo("ERROR: All repositories are not purged successfully.")
 	else:
-		click.echo("ERROR: All repositories are not deleted successfully.")
+		click.echo("ERROR: Purge operation is skipped.")
 
 
-clustered_cli.add_command(setup_database)
-clustered_cli.add_command(create_repository)
+
+clustered_cli.add_command(get_repository_by_name)
+clustered_cli.add_command(add_repository)
 clustered_cli.add_command(get_repository_list)
 clustered_cli.add_command(delete_repository)
-clustered_cli.add_command(delete_repository_all)
+clustered_cli.add_command(purge_all_repositories)
 
+
+###################################### Bootup CLI application ######################################
 
 if __name__ == '__main__':
 	clustered_cli()

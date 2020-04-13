@@ -22,7 +22,7 @@ class DatabaseEngine:
             session.rollback()
             sys.exit(1)
         else:
-            print("INFO: Database operations completed successfully.")
+            # print("INFO: Database operations completed successfully.")
             session.commit()
         finally:
             # print("DEBUG: Expunging objects from session.")
