@@ -7,6 +7,12 @@ class EncryptorError(Error):
 class RepositoryError(Error):
     pass
 
+class ClusterError(Error):
+    pass
+
+
+###################################### Encryptor Engine Exceptions ######################################
+
 class EncryptorNotPresentError(EncryptorError):
     def __init__(self, msg="Requested Encryptor is not found."):
         self.msg = msg
@@ -29,6 +35,7 @@ class EncryptorAlreadyExistsError(EncryptorError):
         return f"<EncryptorAlreadyExistsError({self.msg})>"
 
 
+###################################### Repository Engine Exceptions ######################################
 
 
 class RepositoryNotPresentError(RepositoryError):
@@ -51,3 +58,29 @@ class RepositoryAlreadyExistsError(RepositoryError):
     
     def __repr__(self):
         return f"<RepositoryAlreadyExistsError({self.msg})>"
+
+
+###################################### Cluster Engine Exceptions ######################################
+
+
+class ClusterNotPresentError(ClusterError):
+    def __init__(self, msg="Requested Cluster is not found."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ClusterNotPresentError({self.msg})>"
+
+
+class ClusterAlreadyExistsError(ClusterError):
+    def __init__(self, msg="Requested Cluster already exists."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ClusterAlreadyExistsError({self.msg})>"
+

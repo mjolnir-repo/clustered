@@ -56,7 +56,7 @@ class Repository(Base):
             REPO_DESC = {self.REPO_DESC},
             REPO_ACCESS_KEY_ENCRYPTED = <PROVIDE PROPER VALUE OF ACCESS KEY>,
             REPO_SECRET_KEY_ENCRYPTED = <PROVIDE PROPER VALUE OF SECRET KEY>,
-            REPO_SECRET_KEY_ENCRYPTED = {self.REPO_REGION},
+            REPO_REGION = {self.REPO_REGION},
             REPO_STACK_ID = {self.REPO_STACK_ID},
             REPO_VPC_ID = {self.REPO_VPC_ID},
             REPO_SUBNET_LIST = {self.REPO_SUBNET_LIST},

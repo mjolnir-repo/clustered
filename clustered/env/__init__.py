@@ -13,22 +13,22 @@ class EnvironmetConfiguration:
     @classmethod
     def _get_env_config(cls):
         app_path = os.environ.get('CLUSTERED_APP_PATH')
-        env_file = app_path + '/clustered/env/ENV_Config.json'
+        env_file = app_path + '/clustered/config/Environment_Config.json'
         with open(env_file, 'r') as env_file_content:
             env_file_data = json.load(env_file_content)
-        return env_file_data
+        return (app_path, env_file, env_file_data)
 
 
 class Environment:
 	def __init__(self):
-		self.env_config = EnvironmetConfiguration._get_env_config()
+		self.APP_PATH, self.ENV_FILE, self.ENV_CONFIG = EnvironmetConfiguration._get_env_config()
 		self.AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
 		self.AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
 		self.AWS_DEFAULT_REGION = os.environ.get('AWS_DEFAULT_REGION', '')
 
 	@property
 	def DATABASE_URL(self):
-		_db_list = self.env_config.get('DB', [])
+		_db_list = self.ENV_CONFIG.get('DB', [])
 		if _db_list:
 			_active_db = {}
 			for _db in _db_list:
@@ -36,9 +36,9 @@ class Environment:
 					_active_db = _db
 					break
 			else:
-				raise Exception("No Active database configuratio is available in " + os.environ.get('CLUSTERED_APP_PATH', '') + "/clusterd/env/ENV_Config.json")
+				raise Exception("No Active database configuration is available in " + self.ENV_FILE)
 		else:
-			raise Exception("Database configuratoin is not present in " + os.environ.get('CLUSTERED_APP_PATH', '') + "/clusterd/env/ENV_Config.json. Please add the same or refer documentation.")
+			raise Exception("Database configuratoin is not present in " + self.ENV_FILE + " Please add the same or refer documentation.")
 		if _active_db.get('DB_ENGINE', 'sqlite').lower() == 'sqlite':
 			_db_file = _active_db.get('DB_DETAILS', {}).get('DB_FILE','clustered.db')
 			return f'sqlite:///{_db_file}'
