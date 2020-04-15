@@ -19,30 +19,17 @@ class RepositoryEngine:
 
 
     @staticmethod
-    def describe_repository(repo_name:str = '') -> Repository:
-        with db_obj.session_scope() as sess:
-            repository = [repo for repo in sess.query(Repository).filter(and_(Repository.REPO_ACTIVE_FLAG == 'Y', Repository.REPO_NAME == repo_name.upper()))]
-            if repository:
-                return repository[0]
-            else:
-                raise RepositoryNotPresentError()
-
-
-    @staticmethod
-    def list_repositories() -> [Repository]:
-        with db_obj.session_scope() as session:
-            repo_list = [repo for repo in session.query(Repository).filter(Repository.REPO_ACTIVE_FLAG == 'Y')]
-        return repo_list
-
-
-    @staticmethod
-    def create_repository(repo_name:str, enc_name:str, aws_access_key:str, aws_secret_key:str, aws_region:str) -> bool:
+    def add_repository(repo_name:str, enc_name:str, aws_access_key:str, aws_secret_key:str, aws_region:str) -> None:
         try:
             with db_obj.session_scope() as sess:
-                encryptor = [enc for enc in sess.query(Encryptor).filter(and_(Encryptor.ENC_ACTIVE_FLAG == 'Y', Encryptor.ENC_NAME == enc_name.upper()))]
-                if encryptor:
-                    enc_obj = encryptor[0]
-                else:
+                enc_obj = sess.query(Encryptor)\
+                    .filter(
+                        and_(
+                            Encryptor.ENC_ACTIVE_FLAG == 'Y'
+                            , Encryptor.ENC_NAME == enc_name.upper()
+                        )
+                    ).first()
+                if not enc_obj:
                     raise EncryptorNotPresentError()
 
             if not aws_access_key:
@@ -67,30 +54,45 @@ class RepositoryEngine:
             return True
         except exc.IntegrityError as e:
             raise RepositoryAlreadyExistsError()
-        except Exception as e:
-            print("ERROR: Exception occured while creating repository: " + str(e))
-            return False
 
 
     @staticmethod
-    def delete_repository(repo_name:str) -> bool:
-        try:
-            #TO DO: Write all AWS related Code here.
-            with db_obj.session_scope() as session:
-                session.query(Repository).filter(and_(Repository.REPO_NAME == repo_name.upper(), Repository.REPO_ACTIVE_FLAG == 'Y')).delete(synchronize_session=False)
-            return True
-        except Exception as e:
-            print("ERROR: Exception occured while deleting repository: " + str(e))
-            return False
+    def describe_repository(repo_name:str = '') -> Repository:
+        with db_obj.session_scope() as sess:
+            repository = sess.query(Repository)\
+                .filter(
+                    and_(
+                        Repository.REPO_ACTIVE_FLAG == 'Y'
+                        , Repository.REPO_NAME == repo_name.upper()
+                    )
+                ).first()
+            if not repository:
+                raise RepositoryNotPresentError()
+            return repository
 
 
     @staticmethod
-    def purge_all_repositories() -> bool:
-        try:
-            #TO DO: Write all AWS related Code here.
-            with db_obj.session_scope() as session:
-                session.query(Repository).delete(synchronize_session=False)
-            return True
-        except Exception as e:
-            print("ERROR: Exception occured while deleting repository: " + str(e))
-            return False
+    def list_repositories() -> [Repository]:
+        with db_obj.session_scope() as session:
+            repo_list = [repo for repo in session.query(Repository).filter(Repository.REPO_ACTIVE_FLAG == 'Y')]
+        return repo_list
+
+
+    @staticmethod
+    def delete_repository(repo_name:str) -> None:
+        #TO DO: Write all AWS related Code here.
+        with db_obj.session_scope() as session:
+            session.query(Repository)\
+                .filter(
+                    and_(
+                        Repository.REPO_NAME == repo_name.upper()
+                        , Repository.REPO_ACTIVE_FLAG == 'Y'
+                    )
+                ).delete(synchronize_session=False)
+
+
+    @staticmethod
+    def purge_all_repositories() -> None:
+        #TO DO: Write all AWS related Code here.
+        with db_obj.session_scope() as session:
+            session.query(Repository).delete(synchronize_session=False)

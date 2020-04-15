@@ -104,9 +104,11 @@ class Node(Base):
     NODE_DESC = Column(String(1000), nullable=True)
     NODE_TYPE = Column(String(1), nullable=False)
     NODE_INSTANCE_TYPE = Column(String(10), nullable=False)
-    NODE_INSTANCE_ID = Column(String(50), nullable=True)
     NODE_KEY_PAIR_NAME = Column(String(100), nullable=False)
     NODE_BLOCK_DEVICE_MAPPING = Column(String(100), nullable=False)
+    NODE_INSTANCE_ID = Column(String(50), nullable=True)
+    NODE_PUBLIC_IP = Column(String(50), nullable=True)
+    NODE_PUBLIC_DNS = Column(String(50), nullable=True)
     NODE_STATE = Column(String(10), nullable=False)
     NODE_ACTIVE_FLAG = Column(String(1), nullable=False)
 
@@ -120,10 +122,12 @@ class Node(Base):
             NODE_NAME = {self.NODE_NAME},
             NODE_DESC = {self.NODE_DESC},
             NODE_TYPE = {self.NODE_TYPE},
-            NODE_INSTANCE_TYPE = {self.NODE_INSTANCE_TYPE}, 
-            NODE_INSTANCE_ID = {self.NODE_INSTANCE_ID},
+            NODE_INSTANCE_TYPE = {self.NODE_INSTANCE_TYPE},
             NODE_KEY_PAIR_NAME = {self.NODE_KEY_PAIR_NAME},
             NODE_BLOCK_DEVICE_MAPPING = {self.NODE_BLOCK_DEVICE_MAPPING},
+            NODE_INSTANCE_ID = {self.NODE_INSTANCE_ID},
+            NODE_PUBLIC_IP = {self.NODE_PUBLIC_IP},
+            NODE_PUBLIC_DNS = {self.NODE_PUBLIC_DNS},
             NODE_STATE = {self.NODE_STATE},
             CLUSTER_ACTIVE_FLAG = {self.NODE_ACTIVE_FLAG}
         )>"""

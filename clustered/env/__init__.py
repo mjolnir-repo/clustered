@@ -25,6 +25,9 @@ class Environment:
 		self.AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
 		self.AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
 		self.AWS_DEFAULT_REGION = os.environ.get('AWS_DEFAULT_REGION', '')
+		self.CLUSTER_CONFIG_FILE = self.APP_PATH + '/clustered/config/Cluster_Config.json'
+		self.MASTER_NODE_CONFIG_FILE = self.APP_PATH + '/clustered/config/Master_Node_Config.json'
+		self.SLAVE_NODE_CONFIG_FILE = self.APP_PATH + '/clustered/config/Slave_Node_Config.json'
 
 	@property
 	def DATABASE_URL(self):

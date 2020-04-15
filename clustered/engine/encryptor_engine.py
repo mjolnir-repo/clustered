@@ -20,24 +20,9 @@ class EncryptorEngine:
     def __init__(self):
         pass
 
-    @staticmethod
-    def describe_encryptor(enc_name:str) -> Encryptor:
-        enc_name = enc_name.upper() or 'DEFAULT_ENC'
-        with db_obj.session_scope() as sess:
-            encryptor = [enc for enc in sess.query(Encryptor).filter(and_(Encryptor.ENC_ACTIVE_FLAG == 'Y', Encryptor.ENC_NAME == enc_name.upper()))]
-        if encryptor:
-            return encryptor[0]
-        else:
-            raise EncryptorNotPresentError()
 
     @staticmethod
-    def list_encryptors() -> [Encryptor]:
-        with db_obj.session_scope() as sess:
-            encryptors = [enc for enc in  sess.query(Encryptor).filter(Encryptor.ENC_ACTIVE_FLAG == 'Y')]
-        return encryptors
-
-    @staticmethod
-    def add_encryptor(enc_name:str) -> bool:
+    def add_encryptor(enc_name:str) -> None:
         try:
             with db_obj.session_scope() as session:
                 enc_obj = Encryptor(
@@ -46,31 +31,47 @@ class EncryptorEngine:
                     ENC_ACTIVE_FLAG = 'Y'
                 )
                 session.add(enc_obj)
-            return True
         except exc.IntegrityError as e:
             raise EncryptorAlreadyExistsError()
-        except Exception as e:
-            print("ERROR: Exception occured while creating repository: " + str(e))
-            return False
-        
+
+
+    @staticmethod
+    def describe_encryptor(enc_name:str) -> Encryptor:
+        enc_name = enc_name.upper() or 'DEFAULT_ENC'
+        with db_obj.session_scope() as sess:
+            encryptor = sess.query(Encryptor)\
+                .filter(
+                    and_(
+                        Encryptor.ENC_ACTIVE_FLAG == 'Y',
+                        Encryptor.ENC_NAME == enc_name.upper()
+                    )
+                ).first()
+        if encryptor:
+            return encryptor
+        else:
+            raise EncryptorNotPresentError()
+
+ 
+    @staticmethod
+    def list_encryptors() -> [Encryptor]:
+        with db_obj.session_scope() as sess:
+            encryptors = [enc for enc in  sess.query(Encryptor).filter(Encryptor.ENC_ACTIVE_FLAG == 'Y')]
+        return encryptors
+
     
     @staticmethod
-    def delete_encryptor(enc_name:str) -> bool:
-        try:
-            with db_obj.session_scope() as session:
-                session.query(Encryptor).filter(and_(Encryptor.ENC_NAME == enc_name.upper(), Encryptor.ENC_ACTIVE_FLAG == 'Y')).delete(synchronize_session=False)
-            return True
-        except Exception as e:
-            print("ERROR: Exception occured while creating repository: " + str(e))
-            return False
+    def delete_encryptor(enc_name:str) -> None:
+        with db_obj.session_scope() as session:
+            session.query(Encryptor)\
+                .filter(
+                    and_(
+                        Encryptor.ENC_NAME == enc_name.upper()
+                        , Encryptor.ENC_ACTIVE_FLAG == 'Y'
+                    )
+                ).delete(synchronize_session=False)
 
 
     @staticmethod
-    def purge_all_encryptors() -> bool:
-        try:
+    def purge_all_encryptors() -> None:
             with db_obj.session_scope() as session:
                 session.query(Encryptor).delete(synchronize_session=False)
-            return True
-        except Exception as e:
-            print("ERROR: Exception occured while creating repository: " + str(e))
-            return False

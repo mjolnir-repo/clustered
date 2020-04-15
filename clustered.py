@@ -6,6 +6,7 @@ from clustered.env import env
 from clustered.engine.encryptor_engine import EncryptorEngine
 from clustered.engine.repository_engine import RepositoryEngine
 from clustered.engine.cluster_engine import ClusterEngine
+from clustered.engine.node_engine import NodeEngine
 from clustered.database import db_obj
 from clustered.models import Base
 
@@ -33,56 +34,49 @@ def clustered_cli():
 
 @click.command('setup-db')
 def setup_database():
-	force = click.prompt("DEBUG:Do you really want to setup empty database(Y/N)?", type=str)
-	if force.lower() == 'y':
-		Base.metadata.create_all(db_obj.db_engine)
-		click.echo("INFO: Database set up is completed.")
-	else:
-		click.echo("INFO: Database set up is cancelled.")
+	try:
+		force = click.prompt("INPUT: Do you really want to setup empty database(Y/N)?", type=str)
+		if force.lower() == 'y':
+			Base.metadata.create_all(db_obj.db_engine)
+			click.echo("INFO: Database set up is completed.")
+		else:
+			click.echo("INFO: Database set up is cancelled.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while setting up database: " + str(e))
+		click.echo(f"Encryptor<'{enc_name}'> is not added.")
 
 
 @click.command('cleanup-db')
 def cleanup_database():
-	force = click.prompt("DEBUG:Do you really want to drop all tables from database(Y/N)?", type=str)
-	if force.lower() == 'y':
-		Base.metadata.drop_all(db_obj.db_engine)
-		click.echo("INFO: Database clean up is completed.")
-	else:
-		click.echo("DEDUB: Database clean up is cancelled.")
-
-
-@click.command('purge-db')
-def purge_database():
-	force = click.prompt("DEBUG:Do you really want to delete all records from all tables(Y/N)?", type=str)
-	if force.lower() == 'y':
-		clus_res = ClusterEngine.purge_all_clusters()
-		if clus_res:
-			click.echo("INFO: All clusters are purged successfully.")
+	try:
+		force = click.prompt("DEBUG:Do you really want to drop all tables from database(Y/N)?", type=str)
+		if force.lower() == 'y':
+			Base.metadata.drop_all(db_obj.db_engine)
+			click.echo("INFO: Database clean up is completed.")
 		else:
-			click.echo("ERROR: All clusters are not purged.")
+			click.echo("DEDUG: Database clean up is cancelled.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while cleaning up database: " + str(e))
+		click.echo(f"Encryptor<'{enc_name}'> is not added.")
 
-		repo_res = RepositoryEngine.purge_all_repositories()
-		if repo_res:
-			click.echo("INFO: All repositories are purged successfully.")
-		else:
-			click.echo("ERROR: All repositories are not purged successfully.")
-
-		enc_res = EncryptorEngine.purge_all_encryptors()
-		if enc_res:
-			click.echo("INFO: All encryptors are purged successfully.")
-		else:
-			click.echo("ERROR: All encryptors are not purged successfully.")
-		click.echo("INFO: Database purge is completed.")
-	else:
-		click.echo("DEDUB: Database purge is cancelled.")
 
 
 clustered_cli.add_command(setup_database)
 clustered_cli.add_command(cleanup_database)
-clustered_cli.add_command(purge_database)
 
 
 ###################################### Encryptor CLI Commands ######################################
+
+@click.command('add-enc')
+@click.argument('enc_name', type=str, nargs=1)
+def add_encryptor(enc_name):
+	try:
+		resp = EncryptorEngine.add_encryptor(enc_name)
+		click.echo(f"INFO: Encryptor<'{enc_name}'> is added successfully.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
+		click.echo(f"Encryptor<'{enc_name}'> is not added.")
+
 
 @click.command('desc-enc')
 @click.argument('enc_name', type=str, nargs=1)
@@ -103,65 +97,38 @@ def list_encryptors():
 		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
 
 
-@click.command('add-enc')
-@click.argument('enc_name', type=str, nargs=1)
-def add_encryptor(enc_name):
-	try:
-		resp = EncryptorEngine.add_encryptor(enc_name)
-		if resp:
-			click.echo("INFO: Encryptor<'" + enc_name + "'> is added successfully.")
-		else:
-			raise Exception("Encryptor<'" + enc_name + "'> is not added.")
-	except Exception as e:
-		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
-
-
 @click.command('delete-enc')
 @click.argument('enc_name', type=str, nargs=1)
 def delete_encryptor(enc_name):
-	force = click.prompt("Are you sure to delete '" + enc_name + "' encryptor(Y/N)?")
+	force = click.prompt(f"INPUT: Are you sure to delete '{enc_name}' encryptor(Y/N)?")
 	if force.lower() == 'y':
-		response = EncryptorEngine.delete_encryptor(enc_name)
-		if response:
-			click.echo("INFO: Encryptor<'" + enc_name + "'> is deleted successfully.")
-		else:
-			click.echo("ERROR: Encryptor<'" + enc_name + "'> is not deleted successfully.")
+		resp = EncryptorEngine.delete_encryptor(enc_name)
+		click.echo(f"INFO: Encryptor<'{enc_name}'> is deleted successfully.")
 	else:
 		click.echo("DEBUG: Delete operation is skipped.")
+		click.echo(f"ERROR: Encryptor<'{enc_name}'> is not deleted.")
 
 
 @click.command('purge-all-encs')
 def purge_all_encryptors():
-	force = click.prompt("Do you want to clear all encryptors(Y/N)?")
+	force = click.prompt("INPUT: Do you want to clear all encryptors(Y/N)?")
 	if force.lower() == 'y':
-		response = EncryptorEngine.purge_all_encryptors()
-		if response:
-			click.echo("INFO: All encryptors are purged successfully.")
-		else:
-			click.echo("ERROR: All encryptors are not purged successfully.")
+		resp = EncryptorEngine.purge_all_encryptors()
+		click.echo("INFO: All encryptors are purged successfully.")
 	else:
 		click.echo("DEBUG: Purge operation is skipped.")
+		click.echo("ERROR: All encryptors are not purged successfully.")
 
 
 
+clustered_cli.add_command(add_encryptor)
 clustered_cli.add_command(describe_encryptor)
 clustered_cli.add_command(list_encryptors)
-clustered_cli.add_command(add_encryptor)
 clustered_cli.add_command(delete_encryptor)
 clustered_cli.add_command(purge_all_encryptors)
 
 
 ###################################### Repository CLI Commands ######################################
-
-@click.command('desc-repo')
-@click.argument('repo_name', type=str, nargs=1)
-def describe_repository(repo_name):
-	try:
-		resp = RepositoryEngine.describe_repository(repo_name)
-		click.echo(resp)
-	except Exception as e:
-		click.echo("ERROR: Exception occured while extracting requested repository: " + str(e))
-
 
 @click.command('add-repo')
 @click.argument('repo_name', type=str, nargs=1)
@@ -182,166 +149,289 @@ def add_repository(repo_name, enc_name, **kwargs):
 		else:
 			aws_region = ''
 
-		response = RepositoryEngine.create_repository(repo_name, enc_name, aws_access_key, aws_secret_key, aws_region)
-		if response:
-			click.echo("INFO: Repository<'" + repo_name + "'> is created successfully.")
-		else:
-			click.echo("ERROR: Repository<'" + repo_name + "'> is not created.")
+		resp = RepositoryEngine.add_repository(repo_name, enc_name, aws_access_key, aws_secret_key, aws_region)
+		click.echo(f"INFO: Repository<'{repo_name}'> is created successfully.")
 	except Exception as e:
-		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
+		click.echo("ERROR: Exception occured while adding repository: " + str(e))
+		click.echo(f"ERROR: Repository<'{repo_name}'> is not created.")
 
 
-@click.command('ls-repos')
-def list_repositories():
-	resp = RepositoryEngine.list_repositories()
-	print(resp)
-
-
-@click.command('delete-repo')
+@click.command('desc-repo')
 @click.argument('repo_name', type=str, nargs=1)
-def delete_repository(repo_name):
-	force = click.prompt("Are you sure to delete '" + repo_name + "' repository(Y/N)?")
-	if force.lower() == 'y':
-		response = RepositoryEngine.delete_repository(repo_name)
-		if response:
-			click.echo("INFO: Repository<'" + repo_name + "'> is deleted successfully.")
-		else:
-			click.echo("ERROR: Repository<'" + repo_name + "'> is not deleted successfully.")
-	else:
-		click.echo("DEBUG: Delete operation is skipped.")
-
-
-@click.command('purge-all-repos')
-def purge_all_repositories():
-	force = click.prompt("Do you want to clear all repositories(Y/N)?")
-	if force.lower() == 'y':
-		response = RepositoryEngine.purge_all_repositories()
-		if response:
-			click.echo("INFO: All repositories are purged successfully.")
-		else:
-			click.echo("ERROR: All repositories are not purged successfully.")
-	else:
-		click.echo("DEBUG: Purge operation is skipped.")
-
-
-
-clustered_cli.add_command(describe_repository)
-clustered_cli.add_command(add_repository)
-clustered_cli.add_command(list_repositories)
-clustered_cli.add_command(delete_repository)
-clustered_cli.add_command(purge_all_repositories)
-
-
-###################################### Repository CLI Commands ######################################
-
-@click.command('desc-cluster')
-@click.argument('clus_name', type=str, nargs=1)
-def describe_cluster(clus_name):
+def describe_repository(repo_name):
 	try:
-		resp = ClusterEngine.describe_cluster(clus_name)
+		resp = RepositoryEngine.describe_repository(repo_name)
 		click.echo(resp)
 	except Exception as e:
 		click.echo("ERROR: Exception occured while extracting requested repository: " + str(e))
 
 
+@click.command('ls-repos')
+def list_repositories():
+	try:
+		resp = RepositoryEngine.list_repositories()
+		print(resp)
+	except Exception as e:
+		click.echo("ERROR: Exception occured while extracting all repositories: " + str(e))
+
+
+@click.command('delete-repo')
+@click.argument('repo_name', type=str, nargs=1)
+def delete_repository(repo_name):
+	try:
+		force = click.prompt(f"INPUT: Are you sure to delete Repository<'{repo_name}'>(Y/N)?")
+		if force.lower() == 'y':
+			resp = RepositoryEngine.delete_repository(repo_name)
+			click.echo(f"INFO: Repository<'{repo_name}'> is deleted successfully.")
+		else:
+			click.echo("DEBUG: Delete operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while deleting requested repository: " + str(e))
+		click.echo(f"ERROR: Repository<'{repo_name}'> is not deleted.")
+
+
+@click.command('purge-all-repos')
+def purge_all_repositories():
+	try:
+		force = click.prompt(f"INPUT: Do you want to clear all repositories(Y/N)?")
+		if force.lower() == 'y':
+			resp = RepositoryEngine.purge_all_repositories()
+			click.echo("INFO: All repositories are purged successfully.")
+		else:
+			click.echo("DEBUG: Purge operation is skipped.")
+	except Exception as e:
+		print("ERROR: Exception occured while purging all repository: " + str(e))
+		click.echo("ERROR: All repositories are not purged successfully.")
+
+
+
+clustered_cli.add_command(add_repository)
+clustered_cli.add_command(describe_repository)
+clustered_cli.add_command(list_repositories)
+clustered_cli.add_command(delete_repository)
+clustered_cli.add_command(purge_all_repositories)
+
+
+###################################### Cluster CLI Commands ######################################
+
 @click.command('add-cluster')
 @click.argument('clus_name', type=str, nargs=1)
 @click.argument('repo_name', type=str, nargs=1)
-@click.option('-a', '--cluster-config-file', 'clus_conf_file', default='', help="Cluster configuration file, if not present, default configurations will be used from config/Cluster_Config.json.")
+@click.option('-f', '--cluster-config-file', 'clus_conf_file', default='', help="Cluster configuration file, if not present, default configurations will be used from config/Cluster_Config.json.")
 def add_cluster(clus_name, repo_name, **kwargs):
 	try:
 		clus_conf_file = kwargs.get('clus_conf_file', '')
-		if clus_conf_file:
-			pass
-		else:
-			clus_conf_file = env.APP_PATH + "/clustered/config/Cluster_Config.json"
+		if not clus_conf_file:
+			clus_conf_file = env.CLUSTER_CONFIG_FILE
 			click.echo("DEBUG: Cluster configuration file is not provided, using default cluster configuration file: " + clus_conf_file)
-
-		response = ClusterEngine.create_cluster(clus_name, repo_name, clus_conf_file)
-		if response:
-			click.echo("INFO: Cluster<'" + clus_name + "'> is created successfully.")
-		else:
-			click.echo("ERROR: Cluster<'" + clus_name + "'> is not created successfully.")
+		response = ClusterEngine.add_cluster(clus_name, repo_name, clus_conf_file)
+		click.echo(f"INFO: Cluster<'{clus_name}'> is created successfully.")
 	except Exception as e:
-		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
+		click.echo("ERROR: Exception occured while adding cluster: " + str(e))
+		click.echo(f"ERROR: Cluster<'{clus_name}'> is not created.")
+
+
+@click.command('desc-cluster')
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+def describe_cluster(clus_name, repo_name):
+	try:
+		resp = ClusterEngine.describe_cluster(clus_name, repo_name)
+		click.echo(resp)
+	except Exception as e:
+		click.echo("ERROR: Exception occured while extracting requested cluster: " + str(e))
 
 
 @click.command('ls-clusters')
-def list_clusters():
-	resp = ClusterEngine.list_clusters()
-	print(resp)
+@click.argument('repo_name', type=str, nargs=1)
+def list_clusters(repo_name):
+	try:
+		resp = ClusterEngine.list_clusters(repo_name)
+		print(resp)
+	except Exception as e:
+		click.echo(f"ERROR: Exception occured while extracting all clusters of Repository<'{repo_name}'>: " + str(e))
 
 
 @click.command('start-cluster')
 @click.argument('clus_name', type=str, nargs=1)
-def start_cluster(clus_name):
+@click.argument('repo_name', type=str, nargs=1)
+def start_cluster(clus_name, repo_name):
 	try:
-		force = click.prompt("Start Cluster<'" + clus_name + "'>(Y/N)?")
+		force = click.prompt(f"INPUT: Start Cluster<'{clus_name}'>(Y/N)?")
 		if force.lower() == 'y':
-			resp = ClusterEngine.start_cluster(clus_name)
-			if resp:
-				click.echo("INFO: Cluster<'" + clus_name + "'> is running now.")
-			else:
-				click.echo("ERROR: Cluster<'" + clus_name + "'> could not be started.")
+			resp = ClusterEngine.start_cluster(clus_name, repo_name)
+			click.echo(f"INFO: Cluster<'{clus_name}'> is running now.")
 		else:
 			click.echo("DEBUG: Start cluster command is cancelled.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while starting cluster: " + str(e))
+		click.echo(f"ERROR: Cluster<'{clus_name}'> could not be started.")
 
 
 @click.command('stop-cluster')
 @click.argument('clus_name', type=str, nargs=1)
-def stop_cluster(clus_name):
+@click.argument('repo_name', type=str, nargs=1)
+def stop_cluster(clus_name, repo_name):
 	try:
-		force = click.prompt("Stop Cluster<'" + clus_name + "'>(Y/N)?")
+		force = click.prompt(f"INPUT: Stop Cluster<'{clus_name}'>(Y/N)?")
 		if force.lower() == 'y':
-			resp = ClusterEngine.stop_cluster(clus_name)
-			if resp:
-				click.echo("INFO: Cluster<'" + clus_name + "'> is stopped now.")
-			else:
-				click.echo("ERROR: Cluster<'" + clus_name + "'> could not be stopped.")
+			resp = ClusterEngine.stop_cluster(clus_name, repo_name)
+			click.echo(f"INFO: Cluster<'{clus_name}'> is stopped now.")
 		else:
 			click.echo("DEBUG: Stop cluster command is cancelled.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while stopping cluster: " + str(e))
+		click.echo(f"ERROR: Cluster<'{clus_name}'> could not be stopped.")
 
 
 @click.command('delete-cluster')
 @click.argument('clus_name', type=str, nargs=1)
 @click.argument('repo_name', type=str, nargs=1)
 def delete_cluster(clus_name, repo_name):
-	force = click.prompt("Are you sure to delete '" + clus_name + "' cluster(Y/N)?")
-	if force.lower() == 'y':
-		response = ClusterEngine.delete_cluster(clus_name, repo_name)
-		if response:
-			click.echo("INFO: Cluster<'" + clus_name + "'> is deleted successfully.")
+	try:
+		force = click.prompt(f"INPUT: Are you sure to delete '{clus_name}' cluster(Y/N)?")
+		if force.lower() == 'y':
+			response = ClusterEngine.delete_cluster(clus_name, repo_name)
+			click.echo(f"INFO: Cluster<'{clus_name}'> is deleted successfully.")
 		else:
-			click.echo("ERROR: Cluster<'" + clus_name + "'> is not deleted.")
-	else:
-		click.echo("DEBUG: Delete operation is skipped.")
+			click.echo("DEBUG: Delete operation is skipped.")
+	except Exception as e:
+		print("ERROR: Exception occured while deleting cluster: " + str(e))
+		click.echo(f"ERROR: Cluster<'{clus_name}'> is not deleted.")
 
 
 @click.command('purge-all-clusters')
-def purge_all_clusters():
-	force = click.prompt("Do you want to clear all clusters(Y/N)?")
-	if force.lower() == 'y':
-		response = ClusterEngine.purge_all_clusters()
-		if response:
-			click.echo("INFO: All clusters are purged successfully.")
+@click.argument('repo_name', type=str, nargs=1)
+def purge_all_clusters(repo_name):
+	try:
+		force = click.prompt(f"INPUT: Do you want to clear all clusters of Repository<'{repo_name}'>(Y/N)?")
+		if force.lower() == 'y':
+			response = ClusterEngine.purge_all_clusters(repo_name)
+			click.echo(f"INFO: All clusters of Repository<'{repo_name}'> are purged successfully.")
 		else:
-			click.echo("ERROR: All clusters are not purged.")
-	else:
-		click.echo("DEBUG: Purge operation is skipped.")
+			click.echo(f"DEBUG: Purge operation is skipped.")
+	except Exception as e:
+		print(f"ERROR: Exception occured while deleting all clusters from Repository<'{repo_name}'>: " + str(e))
+		click.echo(f"ERROR: All clusters of Repository<'{repo_name}'> are not purged.")
 
 
 
-clustered_cli.add_command(describe_cluster)
 clustered_cli.add_command(add_cluster)
+clustered_cli.add_command(describe_cluster)
 clustered_cli.add_command(list_clusters)
 clustered_cli.add_command(start_cluster)
 clustered_cli.add_command(stop_cluster)
 clustered_cli.add_command(delete_cluster)
 clustered_cli.add_command(purge_all_clusters)
+
+
+###################################### Node CLI Commands ######################################
+
+@click.command('add-master-node')
+@click.argument('node_name', type=str, nargs=1)
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+@click.option('-n', '--node-config-file', 'node_conf_file', default='', help="Node configuration file, if not present, default configurations will be used from config/Master_Node_Config.json.")
+def add_master_node(node_name, clus_name, repo_name, **kwargs):
+	try:
+		node_conf_file = kwargs.get('node_conf_file', '')
+		if node_conf_file:
+			pass
+		else:
+			node_conf_file = env.MASTER_NODE_CONFIG_FILE
+			click.echo("DEBUG: Master Node configuration file is not provided, using default master node configuration file: " + node_conf_file)
+
+		resp = NodeEngine.create_node(node_name, 'M', clus_name, repo_name, node_conf_file)
+		click.echo(f"INFO: Node<'{node_name}'> is created successfully.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while adding node: " + str(e))
+		click.echo(f"ERROR: Node<'{node_name}'> is not created.")
+
+
+@click.command('add-slave-node')
+@click.argument('node_name', type=str, nargs=1)
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+@click.option('-n', '--node-config-file', 'node_conf_file', default='', help="Node configuration file, if not present, default configurations will be used from config/Slave_Node_Config.json.")
+def add_slave_node(node_name, clus_name, repo_name, **kwargs):
+	try:
+		node_conf_file = kwargs.get('node_conf_file', '')
+		if node_conf_file:
+			pass
+		else:
+			node_conf_file = env.SLAVE_NODE_CONFIG_FILE
+			click.echo("DEBUG: Slave Node configuration file is not provided, using default slave node configuration file: " + node_conf_file)
+
+		resp = NodeEngine.create_node(node_name, 'S', clus_name, repo_name, node_conf_file)
+		click.echo(f"INFO: Node<'{node_name}'> is created successfully.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while adding node: " + str(e))
+		click.echo(f"ERROR: Node<'{node_name}'> is not created.")
+
+
+@click.command('desc-node')
+@click.argument('node_name', type=str, nargs=1)
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+def describe_node(node_name, clus_name, repo_name):
+	try:
+		resp = NodeEngine.describe_node(node_name, clus_name, repo_name)
+		click.echo(resp)
+	except Exception as e:
+		click.echo("ERROR: Exception occured while extracting requested node: " + str(e))
+
+
+@click.command('ls-nodes')
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+def list_nodes(clus_name, repo_name):
+	try:
+		resp = NodeEngine.list_nodes(clus_name, repo_name)
+		print(resp)
+	except Exception as e:
+		click.echo("ERROR: Exception occured while listing requested nodes: " + str(e))
+
+
+@click.command('delete-node')
+@click.argument('node_name', type=str, nargs=1)
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+def delete_node(node_name, clus_name, repo_name):
+	try:
+		force = click.prompt(f"INPUT: Are you sure to delete Node<'{node_name}'>(Y/N)?")
+		if force.lower() == 'y':
+			resp = NodeEngine.delete_node(node_name, clus_name, repo_name)
+			click.echo(f"INFO: Node<'{node_name}'> is deleted successfully.")
+		else:
+			click.echo("DEBUG: Delete operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while deleting node: " + str(e))
+		click.echo(f"ERROR: Node<'{node_name}'> is not deleted.")
+
+
+@click.command('purge-all-nodes')
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+def purge_all_nodes(clus_name, repo_name):
+	try:
+		force = click.prompt(f"INPUT: Do you want to clear all nodes in Cluster<'{clus_name}'> of Repository<'{repo_name}'>(Y/N)?")
+		if force.lower() == 'y':
+			resp = NodeEngine.purge_all_nodes(clus_name, repo_name)
+			click.echo(f"INFO: All nodes in Cluster<'{clus_name}'> of Repository<'{repo_name}'> are purged successfully.")
+		else:
+			click.echo("DEBUG: Purge operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while deleting node: " + str(e))
+		click.echo(f"ERROR: All nodes in Cluster<'{clus_name}'> of Repository<'{repo_name}'> are not purged.")
+
+
+
+clustered_cli.add_command(add_master_node)
+clustered_cli.add_command(add_slave_node)
+clustered_cli.add_command(describe_node)
+clustered_cli.add_command(list_nodes)
+clustered_cli.add_command(delete_node)
+clustered_cli.add_command(purge_all_nodes)
 
 
 ###################################### Bootup CLI application ######################################
