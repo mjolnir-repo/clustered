@@ -10,7 +10,7 @@ Encrypt:
 from ..database import db_obj
 from ..models import Encryptor
 from sqlalchemy import and_
-from ..exceptions import EncryptorNotPresentError, EncryptorAlreadyExistsError
+from ..exceptions import EncryptorNotPresentError, EncryptorAlreadyExistsError, WrongActionInvocationError
 from ..encrypt import Encrypt
 from sqlalchemy import exc
 import sys
@@ -41,11 +41,9 @@ class EncryptorEngine:
         with db_obj.session_scope() as sess:
             encryptor = sess.query(Encryptor)\
                 .filter(
-                    and_(
-                        Encryptor.ENC_ACTIVE_FLAG == 'Y',
-                        Encryptor.ENC_NAME == enc_name.upper()
-                    )
-                ).first()
+                    Encryptor.ENC_NAME == enc_name.upper()
+                )\
+                .first()
         if encryptor:
             return encryptor
         else:
@@ -55,23 +53,50 @@ class EncryptorEngine:
     @staticmethod
     def list_encryptors() -> [Encryptor]:
         with db_obj.session_scope() as sess:
-            encryptors = [enc for enc in  sess.query(Encryptor).filter(Encryptor.ENC_ACTIVE_FLAG == 'Y')]
+            encryptors = [
+                {
+                    'ENC_NAME': enc.ENC_NAME,
+                    'ENC_ACTIVE_FLAG': enc.ENC_ACTIVE_FLAG
+                } for enc in sess.query(Encryptor)]
         return encryptors
 
     
     @staticmethod
     def delete_encryptor(enc_name:str) -> None:
         with db_obj.session_scope() as session:
-            session.query(Encryptor)\
+            enc_obj = session.query(Encryptor)\
                 .filter(
                     and_(
                         Encryptor.ENC_NAME == enc_name.upper()
                         , Encryptor.ENC_ACTIVE_FLAG == 'Y'
                     )
-                ).delete(synchronize_session=False)
+                ).first()
+            enc_obj.ENC_ACTIVE_FLAG = 'N'
+            session.commit()
+
+    
+    @staticmethod
+    def recover_encryptor(enc_name:str) -> None:
+        with db_obj.session_scope() as session:
+            enc_obj = session.query(Encryptor)\
+                .filter(
+                    Encryptor.ENC_NAME == enc_name.upper()
+                ).first()
+            if enc_obj.ENC_ACTIVE_FLAG == 'Y':
+                raise WrongActionInvocationError(f"Encryptor<'{enc_name}'> is already Active.")
+            enc_obj.ENC_ACTIVE_FLAG = 'Y'
+            session.commit()
+
+
+    @staticmethod
+    def flush_encryptors() -> None:
+        with db_obj.session_scope() as session:
+            session.query(Encryptor)\
+                .filter(Encryptor.ENC_ACTIVE_FLAG == 'N')\
+                .delete(synchronize_session=False)
 
 
     @staticmethod
     def purge_all_encryptors() -> None:
-            with db_obj.session_scope() as session:
-                session.query(Encryptor).delete(synchronize_session=False)
+        with db_obj.session_scope() as session:
+            session.query(Encryptor).delete(synchronize_session=False)

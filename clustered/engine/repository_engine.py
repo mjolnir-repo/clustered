@@ -61,11 +61,9 @@ class RepositoryEngine:
         with db_obj.session_scope() as sess:
             repository = sess.query(Repository)\
                 .filter(
-                    and_(
-                        Repository.REPO_ACTIVE_FLAG == 'Y'
-                        , Repository.REPO_NAME == repo_name.upper()
-                    )
-                ).first()
+                    Repository.REPO_NAME == repo_name.upper()
+                )\
+                .first()
             if not repository:
                 raise RepositoryNotPresentError()
             return repository
@@ -74,7 +72,12 @@ class RepositoryEngine:
     @staticmethod
     def list_repositories() -> [Repository]:
         with db_obj.session_scope() as session:
-            repo_list = [repo for repo in session.query(Repository).filter(Repository.REPO_ACTIVE_FLAG == 'Y')]
+            repo_list = [
+                {
+                    'REPO_NAME': repo.REPO_NAME,
+                    'REPO_ACTIVE_FLAG': repo.REPO_ACTIVE_FLAG
+                } for repo in session.query(Repository)
+            ]
         return repo_list
 
 
@@ -82,13 +85,38 @@ class RepositoryEngine:
     def delete_repository(repo_name:str) -> None:
         #TO DO: Write all AWS related Code here.
         with db_obj.session_scope() as session:
-            session.query(Repository)\
+            repo_obj = session.query(Repository)\
                 .filter(
                     and_(
                         Repository.REPO_NAME == repo_name.upper()
                         , Repository.REPO_ACTIVE_FLAG == 'Y'
                     )
-                ).delete(synchronize_session=False)
+                ).first()
+            repo_obj.REPO_ACTIVE_FLAG = 'N'
+            session.commit()
+
+
+    @staticmethod
+    def recover_repository(repo_name:str) -> None:
+        #TO DO: Write all AWS related Code here.
+        with db_obj.session_scope() as session:
+            repo_obj = session.query(Repository)\
+                .filter(
+                    Repository.REPO_NAME == repo_name.upper()
+                ).first()
+            if repo_obj.REPO_ACTIVE_FLAG == 'Y':
+                raise WrongActionInvocationError(f"Repository<'{repo_name}'> is already Active.")
+            repo_obj.REPO_ACTIVE_FLAG = 'Y'
+            session.commit()
+
+
+    @staticmethod
+    def flush_repositories() -> None:
+        #TO DO: Write all AWS related Code here.
+        with db_obj.session_scope() as session:
+            session.query(Repository)\
+                .filter(Repository.REPO_ACTIVE_FLAG == 'N')\
+                .delete(synchronize_session=False)
 
 
     @staticmethod

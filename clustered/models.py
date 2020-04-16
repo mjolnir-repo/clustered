@@ -1,7 +1,7 @@
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, LargeBinary, ForeignKey
+from sqlalchemy import Column, Integer, String, LargeBinary, DateTime, ForeignKey
 from sqlalchemy import UniqueConstraint
 
 
@@ -17,6 +17,16 @@ class Encryptor(Base):
 
     REPOSITORIES = relationship("Repository", back_populates="ENCRYPTOR")
     __table_args__ = (UniqueConstraint('ENC_NAME', name = 'encryptor_name_unique'),)
+
+    def __str__(self):
+        return f"""
+        <Encryptor(
+            ENC_ID = {self.ENC_ID},
+            ENC_NAME = {self.ENC_NAME},
+            ENC_NAME = <Encryptor Key>,
+            ENC_ACTIVE_FLAG = {self.ENC_ACTIVE_FLAG}
+        )>
+        """
 
     def __repr__(self):
         return f"""
@@ -47,6 +57,24 @@ class Repository(Base):
     ENCRYPTOR = relationship("Encryptor", back_populates="REPOSITORIES")
     CLUSTERS = relationship("Cluster", back_populates="REPOSITORY")
     __table_args__ = (UniqueConstraint('REPO_NAME', name = 'repo_name_unique'),)
+
+    def __str__(self):
+        return f"""
+        <Repository(
+            REPO_ID = {self.REPO_ID},
+            REPO_NAME = {self.REPO_NAME},
+            REPO_ENC_ID = {self.REPO_ENC_ID}, 
+            REPO_DESC = {self.REPO_DESC},
+            REPO_ACCESS_KEY_ENCRYPTED = <PROVIDE PROPER VALUE OF ACCESS KEY>,
+            REPO_SECRET_KEY_ENCRYPTED = <PROVIDE PROPER VALUE OF SECRET KEY>,
+            REPO_REGION = {self.REPO_REGION},
+            REPO_STACK_ID = {self.REPO_STACK_ID},
+            REPO_VPC_ID = {self.REPO_VPC_ID},
+            REPO_SUBNET_LIST = {self.REPO_SUBNET_LIST},
+            REPO_STATE = {self.REPO_STATE},
+            REPO_ACTIVE_FLAG = {self.REPO_ACTIVE_FLAG}
+        )>
+        """
 
     def __repr__(self):
         return f"""
@@ -82,6 +110,19 @@ class Cluster(Base):
     NODES = relationship("Node", back_populates="CLUSTER")
     __table_args__ = (UniqueConstraint('CLUSTER_REPO_ID', 'CLUSTER_NAME', name = 'cluster_name_unique'), )
 
+    def __str__(self):
+        return f"""
+        <Cluster(
+            CLUSTER_ID = {self.CLUSTER_ID},
+            CLUSTER_REPO_ID = {self.CLUSTER_REPO_ID},
+            CLUSTER_NAME = {self.CLUSTER_NAME},
+            CLUSTER_DESC = {self.CLUSTER_DESC},
+            CLUSTER_SECURITY_GROUP_ID = {self.CLUSTER_SECURITY_GROUP_ID}, 
+            CLUSTER_WHITELISTED_IP_SET = {self.CLUSTER_WHITELISTED_IP_SET},
+            CLUSTER_ACTIVE_FLAG = {self.CLUSTER_ACTIVE_FLAG}
+        )>
+        """
+
     def __repr__(self):
         return f"""
         <Cluster(
@@ -114,6 +155,24 @@ class Node(Base):
 
     CLUSTER = relationship("Cluster", back_populates="NODES")
     __table_args__ = (UniqueConstraint('NODE_CLUSTER_ID', 'NODE_NAME', name = 'node_name_unique'), )
+
+    def __repr__(self):
+        return f"""
+        <Node(
+            NODE_ID = {self.NODE_ID},
+            NODE_CLUSTER_ID = {self.NODE_CLUSTER_ID},
+            NODE_NAME = {self.NODE_NAME},
+            NODE_DESC = {self.NODE_DESC},
+            NODE_TYPE = {self.NODE_TYPE},
+            NODE_INSTANCE_TYPE = {self.NODE_INSTANCE_TYPE},
+            NODE_KEY_PAIR_NAME = {self.NODE_KEY_PAIR_NAME},
+            NODE_BLOCK_DEVICE_MAPPING = {self.NODE_BLOCK_DEVICE_MAPPING},
+            NODE_INSTANCE_ID = {self.NODE_INSTANCE_ID},
+            NODE_PUBLIC_IP = {self.NODE_PUBLIC_IP},
+            NODE_PUBLIC_DNS = {self.NODE_PUBLIC_DNS},
+            NODE_STATE = {self.NODE_STATE},
+            CLUSTER_ACTIVE_FLAG = {self.NODE_ACTIVE_FLAG}
+        )>"""
 
     def __repr__(self):
         return f"""

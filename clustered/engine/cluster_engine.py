@@ -30,7 +30,7 @@ class ClusterEngine:
                         )
                     ).first()
                 if not repo_obj:
-                    raise RepositoryNotPresentError(f"ERROR: Repository<'{repo_name}'> is either not present or inactive.")
+                    raise RepositoryNotPresentError(f"Repository<'{repo_name}'> is either not present or inactive.")
                 #TO DO: Check cluster config file existence
                 #TO DO: Read config file
                 #TO DO: Write all AWS related Code here.
@@ -55,9 +55,7 @@ class ClusterEngine:
                 .join(Repository)\
                 .filter(
                     and_(
-                        Cluster.CLUSTER_ACTIVE_FLAG == 'Y'
-                        , Cluster.CLUSTER_NAME == clus_name.upper()
-                        , Repository.REPO_ACTIVE_FLAG == 'Y'
+                        Cluster.CLUSTER_NAME == clus_name.upper()
                         , Repository.REPO_NAME == repo_name.upper()
                     )
                 ).first()
@@ -70,9 +68,24 @@ class ClusterEngine:
     def list_clusters(repo_name:str = '') -> [Cluster]:
         with db_obj.session_scope() as session:
             if not repo_name:
-                clus_list = [clus for clus in session.query(Cluster).filter(Cluster.CLUSTER_ACTIVE_FLAG == 'Y')]
+                clus_list = [
+                    {
+                        'CLUSTER_NAME': clus.CLUSTER_NAME,
+                        'CLUSTER_ACTIVE_FLAG': clus.CLUSTER_ACTIVE_FLAG
+                    } for clus in session.query(Cluster)
+            ]
             else:
-                clus_list = [clus for clus in session.query(Cluster).join(Repository).filter(and_(Repository.REPO_NAME == repo_name.upper(), Repository.REPO_ACTIVE_FLAG == 'Y', Cluster.CLUSTER_ACTIVE_FLAG == 'Y'))]
+                clus_list = [
+                    {
+                        'CLUSTER_NAME': clus.CLUSTER_NAME,
+                        'CLUSTER_ACTIVE_FLAG': clus.CLUSTER_ACTIVE_FLAG
+                    } for clus in 
+                        session.query(Cluster)\
+                            .join(Repository)\
+                            .filter(
+                                Repository.REPO_NAME == repo_name.upper()
+                            )
+                ]
         return clus_list
 
 
@@ -94,7 +107,7 @@ class ClusterEngine:
     def delete_cluster(clus_name:str, repo_name:str) -> None:
         #TO DO: Write all AWS related Code here.
         with db_obj.session_scope() as session:
-            clus_id = session.query(Cluster.CLUSTER_ID)\
+            clus_obj = session.query(Cluster)\
                 .join(Repository)\
                 .filter(
                     and_(
@@ -103,21 +116,53 @@ class ClusterEngine:
                         , Cluster.CLUSTER_ACTIVE_FLAG == 'Y'
                         , Repository.REPO_ACTIVE_FLAG == 'Y'
                     )
-                ).first()[0]
-            session.query(Cluster)\
+                ).first()
+            clus_obj.CLUSTER_ACTIVE_FLAG == 'N'
+            session.commit()
+
+    
+    @staticmethod
+    def recover_cluster(clus_name:str, repo_name:str) -> None:
+        #TO DO: Write all AWS related Code here.
+        with db_obj.session_scope() as session:
+            clus_obj = session.query(Cluster)\
+                .join(Repository)\
                 .filter(
                     and_(
-                        Cluster.CLUSTER_ID == clus_id
-                        , Cluster.CLUSTER_ACTIVE_FLAG == 'Y'
+                        Cluster.CLUSTER_NAME == clus_name.upper()
+                        , Repository.REPO_NAME == repo_name.upper()
+                        , Repository.REPO_ACTIVE_FLAG == 'Y'
                     )
-                ).delete(synchronize_session=False)
+                ).first()
+            if clus_obj.CLUSTER_ACTIVE_FLAG == 'Y':
+                raise WrongActionInvocationError(f"Cluster<'{clus_name}'> is already Active.")
+            clus_obj.CLUSTER_ACTIVE_FLAG == 'Y'
+            session.commit()
+
+
+    @staticmethod
+    def flush_clusters(repo_name:str) -> None:
+        #TO DO: Write all AWS related Code here.
+        with db_obj.session_scope() as session:
+            inactive_clus_id_list = [clus[0] for clus in session.query(Cluster.CLUSTER_ID)\
+                .join(Repository)\
+                .filter(
+                    and_(
+                        Repository.REPO_NAME == repo_name.upper()
+                        , Cluster.CLUSTER_ACTIVE_FLAG == 'N'
+                    )
+                )
+            ]
+            session.query(Cluster)\
+                .filter(Cluster.CLUSTER_ID.in_(inactive_clus_id_list))\
+                .delete(synchronize_session=False)
 
 
     @staticmethod
     def purge_all_clusters(repo_name:str) -> None:
         #TO DO: Write all AWS related Code here.
         with db_obj.session_scope() as session:
-            clus_list = [clus[0] for clus in session.query(Cluster.CLUSTER_ID)\
+            all_clus_id_list = [clus[0] for clus in session.query(Cluster.CLUSTER_ID)\
                 .join(Repository)\
                 .filter(
                     and_(
@@ -127,9 +172,5 @@ class ClusterEngine:
                 )
             ]
             session.query(Cluster)\
-                .filter(
-                    and_(
-                        Cluster.CLUSTER_ACTIVE_FLAG == 'Y'
-                        , Cluster.CLUSTER_ID.in_(clus_list)
-                    )
-                ).delete(synchronize_session=False)
+                .filter(Cluster.CLUSTER_ID.in_(all_clus_id_list))\
+                .delete(synchronize_session=False)

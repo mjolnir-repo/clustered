@@ -23,6 +23,16 @@ class UnavailableActionError(Error):
     def __repr__(self):
         return f"<UnavailableActionError({self.msg})>"
 
+class WrongActionInvocationError(Error):
+    def __init__(self, msg="Requested action can not be invoked in the current state."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<WrongActionInvocationError({self.msg})>"
+
 
 ###################################### Encryptor Engine Exceptions ######################################
 

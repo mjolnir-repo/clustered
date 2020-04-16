@@ -2,6 +2,7 @@
 
 import click
 import pprint
+import traceback
 from clustered.env import env
 from clustered.engine.encryptor_engine import EncryptorEngine
 from clustered.engine.repository_engine import RepositoryEngine
@@ -43,7 +44,10 @@ def setup_database():
 			click.echo("INFO: Database set up is cancelled.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while setting up database: " + str(e))
-		click.echo(f"Encryptor<'{enc_name}'> is not added.")
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo(f"Database Set-up has Failed.")
 
 
 @click.command('cleanup-db')
@@ -57,7 +61,10 @@ def cleanup_database():
 			click.echo("DEDUG: Database clean up is cancelled.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while cleaning up database: " + str(e))
-		click.echo(f"Encryptor<'{enc_name}'> is not added.")
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo(f"Database clean-up has Failed.")
 
 
 
@@ -75,6 +82,9 @@ def add_encryptor(enc_name):
 		click.echo(f"INFO: Encryptor<'{enc_name}'> is added successfully.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"Encryptor<'{enc_name}'> is not added.")
 
 
@@ -86,6 +96,9 @@ def describe_encryptor(enc_name):
 		click.echo(resp)
 	except Exception as e:
 		click.echo("ERROR: Exception occured while extracting requested encryptor: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 
 
 @click.command('ls-encs')
@@ -95,28 +108,83 @@ def list_encryptors():
 		click.echo(resp)
 	except Exception as e:
 		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 
 
 @click.command('delete-enc')
 @click.argument('enc_name', type=str, nargs=1)
 def delete_encryptor(enc_name):
-	force = click.prompt(f"INPUT: Are you sure to delete '{enc_name}' encryptor(Y/N)?")
-	if force.lower() == 'y':
-		resp = EncryptorEngine.delete_encryptor(enc_name)
-		click.echo(f"INFO: Encryptor<'{enc_name}'> is deleted successfully.")
-	else:
-		click.echo("DEBUG: Delete operation is skipped.")
+	try:
+		force = click.prompt(f"INPUT: Are you sure to delete '{enc_name}' encryptor(Y/N)?")
+		if force.lower() == 'y':
+			resp = EncryptorEngine.delete_encryptor(enc_name)
+			click.echo(f"INFO: Encryptor<'{enc_name}'> is deleted successfully.")
+		else:
+			click.echo("DEBUG: Delete operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while deleting requested encryptor: " + str(e))
 		click.echo(f"ERROR: Encryptor<'{enc_name}'> is not deleted.")
+	try:
+		resp = EncryptorEngine.list_encryptors()
+		click.echo(resp)
+	except Exception as e:
+		click.echo("ERROR: Exception occured while extracting encryptor list: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+
+
+@click.command('recover-enc')
+@click.argument('enc_name', type=str, nargs=1)
+def recover_encryptor(enc_name):
+	try:
+		force = click.prompt(f"INPUT: Are you sure to recover '{enc_name}' encryptor(Y/N)?")
+		if force.lower() == 'y':
+			resp = EncryptorEngine.recover_encryptor(enc_name)
+			click.echo(f"INFO: Encryptor<'{enc_name}'> is recovered successfully.")
+		else:
+			click.echo("DEBUG: Recovery operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while recovering requested encryptor: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo(f"ERROR: Encryptor<'{enc_name}'> is not recovered.")
+
+
+@click.command('flush-encs')
+def flush_encryptors():
+	try:
+		force = click.prompt("INPUT: Do you want to clear inactive encryptors(Y/N)?")
+		if force.lower() == 'y':
+			resp = EncryptorEngine.flush_encryptors()
+			click.echo("INFO: All inactive encryptors are cleared successfully.")
+		else:
+			click.echo("DEBUG: Flush operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while deleting inactive encryptors: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo("ERROR: All inactive encryptors are not cleared.")
 
 
 @click.command('purge-all-encs')
 def purge_all_encryptors():
-	force = click.prompt("INPUT: Do you want to clear all encryptors(Y/N)?")
-	if force.lower() == 'y':
-		resp = EncryptorEngine.purge_all_encryptors()
-		click.echo("INFO: All encryptors are purged successfully.")
-	else:
-		click.echo("DEBUG: Purge operation is skipped.")
+	try:
+		force = click.prompt("INPUT: Do you want to clear all encryptors(Y/N)?")
+		if force.lower() == 'y':
+			resp = EncryptorEngine.purge_all_encryptors()
+			click.echo("INFO: All encryptors are purged successfully.")
+		else:
+			click.echo("DEBUG: Purge operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while purging all encryptor: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo("ERROR: All encryptors are not purged successfully.")
 
 
@@ -125,6 +193,8 @@ clustered_cli.add_command(add_encryptor)
 clustered_cli.add_command(describe_encryptor)
 clustered_cli.add_command(list_encryptors)
 clustered_cli.add_command(delete_encryptor)
+clustered_cli.add_command(recover_encryptor)
+clustered_cli.add_command(flush_encryptors)
 clustered_cli.add_command(purge_all_encryptors)
 
 
@@ -153,6 +223,9 @@ def add_repository(repo_name, enc_name, **kwargs):
 		click.echo(f"INFO: Repository<'{repo_name}'> is created successfully.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while adding repository: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: Repository<'{repo_name}'> is not created.")
 
 
@@ -164,6 +237,9 @@ def describe_repository(repo_name):
 		click.echo(resp)
 	except Exception as e:
 		click.echo("ERROR: Exception occured while extracting requested repository: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 
 
 @click.command('ls-repos')
@@ -173,6 +249,9 @@ def list_repositories():
 		print(resp)
 	except Exception as e:
 		click.echo("ERROR: Exception occured while extracting all repositories: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 
 
 @click.command('delete-repo')
@@ -187,7 +266,45 @@ def delete_repository(repo_name):
 			click.echo("DEBUG: Delete operation is skipped.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while deleting requested repository: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: Repository<'{repo_name}'> is not deleted.")
+
+
+@click.command('recover-repo')
+@click.argument('repo_name', type=str, nargs=1)
+def recover_repository(repo_name):
+	try:
+		force = click.prompt(f"INPUT: Are you sure to recover Repository<'{repo_name}'>(Y/N)?")
+		if force.lower() == 'y':
+			resp = RepositoryEngine.recover_repository(repo_name)
+			click.echo(f"INFO: Repository<'{repo_name}'> is recovered successfully.")
+		else:
+			click.echo("DEBUG: Recovery operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while recobering requested repository: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo(f"ERROR: Repository<'{repo_name}'> is not recovered.")
+
+
+@click.command('flush-repos')
+def flush_repositories():
+	try:
+		force = click.prompt(f"INPUT: Do you want to clear inactive repositories(Y/N)?")
+		if force.lower() == 'y':
+			resp = RepositoryEngine.flush_repositories()
+			click.echo("INFO: All inactive repositories are cleared successfully.")
+		else:
+			click.echo("DEBUG: Flush operation is skipped.")
+	except Exception as e:
+		print("ERROR: Exception occured while clearing inactive repositories: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo("ERROR: All inactive repositories are not deleted.")
 
 
 @click.command('purge-all-repos')
@@ -201,6 +318,9 @@ def purge_all_repositories():
 			click.echo("DEBUG: Purge operation is skipped.")
 	except Exception as e:
 		print("ERROR: Exception occured while purging all repository: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo("ERROR: All repositories are not purged successfully.")
 
 
@@ -209,6 +329,8 @@ clustered_cli.add_command(add_repository)
 clustered_cli.add_command(describe_repository)
 clustered_cli.add_command(list_repositories)
 clustered_cli.add_command(delete_repository)
+clustered_cli.add_command(recover_repository)
+clustered_cli.add_command(flush_repositories)
 clustered_cli.add_command(purge_all_repositories)
 
 
@@ -228,6 +350,9 @@ def add_cluster(clus_name, repo_name, **kwargs):
 		click.echo(f"INFO: Cluster<'{clus_name}'> is created successfully.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while adding cluster: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: Cluster<'{clus_name}'> is not created.")
 
 
@@ -240,6 +365,9 @@ def describe_cluster(clus_name, repo_name):
 		click.echo(resp)
 	except Exception as e:
 		click.echo("ERROR: Exception occured while extracting requested cluster: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 
 
 @click.command('ls-clusters')
@@ -250,6 +378,9 @@ def list_clusters(repo_name):
 		print(resp)
 	except Exception as e:
 		click.echo(f"ERROR: Exception occured while extracting all clusters of Repository<'{repo_name}'>: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 
 
 @click.command('start-cluster')
@@ -265,6 +396,9 @@ def start_cluster(clus_name, repo_name):
 			click.echo("DEBUG: Start cluster command is cancelled.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while starting cluster: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: Cluster<'{clus_name}'> could not be started.")
 
 
@@ -281,6 +415,9 @@ def stop_cluster(clus_name, repo_name):
 			click.echo("DEBUG: Stop cluster command is cancelled.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while stopping cluster: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: Cluster<'{clus_name}'> could not be stopped.")
 
 
@@ -296,8 +433,48 @@ def delete_cluster(clus_name, repo_name):
 		else:
 			click.echo("DEBUG: Delete operation is skipped.")
 	except Exception as e:
-		print("ERROR: Exception occured while deleting cluster: " + str(e))
+		click.echo("ERROR: Exception occured while deleting cluster: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: Cluster<'{clus_name}'> is not deleted.")
+
+
+@click.command('recover-cluster')
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+def recover_cluster(clus_name, repo_name):
+	try:
+		force = click.prompt(f"INPUT: Are you sure to recover '{clus_name}' cluster(Y/N)?")
+		if force.lower() == 'y':
+			response = ClusterEngine.recover_cluster(clus_name, repo_name)
+			click.echo(f"INFO: Cluster<'{clus_name}'> is recovered successfully.")
+		else:
+			click.echo("DEBUG: Recovery operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while recovering cluster: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo(f"ERROR: Cluster<'{clus_name}'> is not recovered.")
+
+
+@click.command('flush-clusters')
+@click.argument('repo_name', type=str, nargs=1)
+def flush_clusters(repo_name):
+	try:
+		force = click.prompt(f"INPUT: Do you want to clear all inactive clusters of Repository<'{repo_name}'>(Y/N)?")
+		if force.lower() == 'y':
+			response = ClusterEngine.flush_clusters(repo_name)
+			click.echo(f"INFO: All inactive clusters of Repository<'{repo_name}'> are cleared successfully.")
+		else:
+			click.echo(f"DEBUG: Purge operation is skipped.")
+	except Exception as e:
+		click.echo(f"ERROR: Exception occured while deleting all inactive clusters from Repository<'{repo_name}'>: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo(f"ERROR: All inactive clusters of Repository<'{repo_name}'> are not cleared.")
 
 
 @click.command('purge-all-clusters')
@@ -311,7 +488,10 @@ def purge_all_clusters(repo_name):
 		else:
 			click.echo(f"DEBUG: Purge operation is skipped.")
 	except Exception as e:
-		print(f"ERROR: Exception occured while deleting all clusters from Repository<'{repo_name}'>: " + str(e))
+		click.echo(f"ERROR: Exception occured while deleting all clusters from Repository<'{repo_name}'>: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: All clusters of Repository<'{repo_name}'> are not purged.")
 
 
@@ -322,6 +502,8 @@ clustered_cli.add_command(list_clusters)
 clustered_cli.add_command(start_cluster)
 clustered_cli.add_command(stop_cluster)
 clustered_cli.add_command(delete_cluster)
+clustered_cli.add_command(recover_cluster)
+clustered_cli.add_command(flush_clusters)
 clustered_cli.add_command(purge_all_clusters)
 
 
@@ -345,6 +527,9 @@ def add_master_node(node_name, clus_name, repo_name, **kwargs):
 		click.echo(f"INFO: Node<'{node_name}'> is created successfully.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while adding node: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: Node<'{node_name}'> is not created.")
 
 
@@ -366,6 +551,9 @@ def add_slave_node(node_name, clus_name, repo_name, **kwargs):
 		click.echo(f"INFO: Node<'{node_name}'> is created successfully.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while adding node: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: Node<'{node_name}'> is not created.")
 
 
@@ -379,6 +567,9 @@ def describe_node(node_name, clus_name, repo_name):
 		click.echo(resp)
 	except Exception as e:
 		click.echo("ERROR: Exception occured while extracting requested node: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 
 
 @click.command('ls-nodes')
@@ -390,6 +581,9 @@ def list_nodes(clus_name, repo_name):
 		print(resp)
 	except Exception as e:
 		click.echo("ERROR: Exception occured while listing requested nodes: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 
 
 @click.command('delete-node')
@@ -406,7 +600,49 @@ def delete_node(node_name, clus_name, repo_name):
 			click.echo("DEBUG: Delete operation is skipped.")
 	except Exception as e:
 		click.echo("ERROR: Exception occured while deleting node: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: Node<'{node_name}'> is not deleted.")
+
+
+@click.command('recover-node')
+@click.argument('node_name', type=str, nargs=1)
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+def recover_node(node_name, clus_name, repo_name):
+	try:
+		force = click.prompt(f"INPUT: Are you sure to recover Node<'{node_name}'>(Y/N)?")
+		if force.lower() == 'y':
+			resp = NodeEngine.recover_node(node_name, clus_name, repo_name)
+			click.echo(f"INFO: Node<'{node_name}'> is recovered successfully.")
+		else:
+			click.echo("DEBUG: Recovery operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while recovering node: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo(f"ERROR: Node<'{node_name}'> is not recovered.")
+
+
+@click.command('flush-nodes')
+@click.argument('clus_name', type=str, nargs=1)
+@click.argument('repo_name', type=str, nargs=1)
+def flush_nodes(clus_name, repo_name):
+	try:
+		force = click.prompt(f"INPUT: Do you want to clear all inactive nodes in Cluster<'{clus_name}'> of Repository<'{repo_name}'>(Y/N)?")
+		if force.lower() == 'y':
+			resp = NodeEngine.flush_nodes(clus_name, repo_name)
+			click.echo(f"INFO: All inactive nodes in Cluster<'{clus_name}'> of Repository<'{repo_name}'> are purged successfully.")
+		else:
+			click.echo("DEBUG: Purge operation is skipped.")
+	except Exception as e:
+		click.echo("ERROR: Exception occured while deleting all inactive nodes: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
+		click.echo(f"ERROR: All inactive nodes in Cluster<'{clus_name}'> of Repository<'{repo_name}'> are not deleted.")
 
 
 @click.command('purge-all-nodes')
@@ -421,7 +657,10 @@ def purge_all_nodes(clus_name, repo_name):
 		else:
 			click.echo("DEBUG: Purge operation is skipped.")
 	except Exception as e:
-		click.echo("ERROR: Exception occured while deleting node: " + str(e))
+		click.echo("ERROR: Exception occured while prging all nodes: " + str(e))
+		click.echo('~' * 100)
+		traceback.print_exc()
+		click.echo('~' * 100)
 		click.echo(f"ERROR: All nodes in Cluster<'{clus_name}'> of Repository<'{repo_name}'> are not purged.")
 
 
@@ -431,6 +670,8 @@ clustered_cli.add_command(add_slave_node)
 clustered_cli.add_command(describe_node)
 clustered_cli.add_command(list_nodes)
 clustered_cli.add_command(delete_node)
+clustered_cli.add_command(recover_node)
+clustered_cli.add_command(flush_nodes)
 clustered_cli.add_command(purge_all_nodes)
 
 
@@ -438,24 +679,3 @@ clustered_cli.add_command(purge_all_nodes)
 
 if __name__ == '__main__':
 	clustered_cli()
-
-
-
-
-
-# @click.command('test-models')
-# def test_database_models():
-# 	repo_one = Repository(REPO_NAME='abc', REPO_ACCESS_KEY_ENCRYPTED='abc', REPO_SECRET_KEY_ENCRYPTED='def', REPO_STATE='limbo', REPO_ACTIVE_FLAG='N')
-# 	cluster_one = Cluster(CLUSTER_NAME='cluster_one', CLUSTER_STATE = 'limbo', CLUSTER_ACTIVE_FLAG = 'N', REPOSITORY = repo_one)
-# 	cluster_two = Cluster(CLUSTER_NAME='cluster_two', CLUSTER_STATE = 'limbo', CLUSTER_ACTIVE_FLAG = 'N', REPOSITORY = repo_one)
-# 	node_one = Node(NODE_NAME = 'node_one', NODE_TYPE = 'M', NODE_INSTANCE_TYPE = 't2.micro', NODE_KEY_PAIR_NAME = 'spark-cluster', NODE_BLOCK_DEVICE_MAPPING = 'a/b/c', NODE_STATE = 'limbo', NODE_ACTIVE_FLAG = 'N', CLUSTER = cluster_one)
-# 	node_two = Node(NODE_NAME = 'node_two', NODE_TYPE = 'M', NODE_INSTANCE_TYPE = 't2.micro', NODE_KEY_PAIR_NAME = 'spark-cluster', NODE_BLOCK_DEVICE_MAPPING = 'a/b/c', NODE_STATE = 'limbo', NODE_ACTIVE_FLAG = 'N', CLUSTER = cluster_one)
-# 	node_three = Node(NODE_NAME = 'node_three', NODE_TYPE = 'M', NODE_INSTANCE_TYPE = 't2.micro', NODE_KEY_PAIR_NAME = 'spark-cluster', NODE_BLOCK_DEVICE_MAPPING = 'a/b/c', NODE_STATE = 'limbo', NODE_ACTIVE_FLAG = 'N', CLUSTER = cluster_two)
-# 	node_four = Node(NODE_NAME = 'node_four', NODE_TYPE = 'M', NODE_INSTANCE_TYPE = 't2.micro', NODE_KEY_PAIR_NAME = 'spark-cluster', NODE_BLOCK_DEVICE_MAPPING = 'a/b/c', NODE_STATE = 'limbo', NODE_ACTIVE_FLAG = 'N', CLUSTER = cluster_two)
-# 	print(node_three)
-# 	print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-# 	print(node_two)
-# 	print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-# 	print(node_four.CLUSTER)
-# 	print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-# 	print(node_one.CLUSTER.REPOSITORY)
