@@ -136,4 +136,4 @@ We are planning to include following features(feels really important now that we
 * One python package version of the utility will be provided to integrate it with other applications.
 
 ## Conclusion:
-Let me end the article with thanking you for going through the article. It will be highly appreciated if anyone have any suggestions, ideas to implement. In case of any queries, suggestion, I am available on _+91-9593090126_ and saumalya75@gmail.com. The entire project is available on my BitBucket repository - https://bitbucket.org/saumalya75/sparkclusteronaws/src/master. The repository can be cloned from 'git@bitbucket.org:saumalya75/sparkclusteronaws.git'.
+Let me end the article with thanking you for going through the article. It will be highly appreciated if anyone have any suggestions, ideas to implement. In case of any queries, suggestion, I am available on _+91-9593090126_ and saumalya75@gmail.com. The entire project is available on - https://bitbucket.org/saumalya75/sparkclusteronaws/src/master. The repository can be cloned from 'git@bitbucket.org:saumalya75/sparkclusteronaws.git'.
