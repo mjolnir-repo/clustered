@@ -1,11 +1,4 @@
 {
-    "DB" : [
-        {
-            "DB_ENGINE": "sqlite",
-            "DB_DETAILS": {
-                "DB_FILE": "/Volumes/WorkSpace/POC/SparkClusterEC2/sparkclusteronaws/clustered/database/clustered.db"
-            },
-            "DB_ACTIVE_FLAG": 1
-        }
-    ]
+    "DB_ENGINE": "sqlite",
+    "DB_FILE": "/Volumes/WorkSpace/POC/SparkClusterEC2/sparkclusteronaws/clustered/database/clustered.db"
 }
