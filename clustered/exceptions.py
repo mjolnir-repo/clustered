@@ -1,6 +1,9 @@
 class Error(Exception):
     pass
 
+class ConfigurationError(Error):
+    pass
+
 class EncryptorError(Error):
     pass
 
@@ -33,6 +36,38 @@ class WrongActionInvocationError(Error):
     def __repr__(self):
         return f"<WrongActionInvocationError({self.msg})>"
 
+
+###################################### Configuration Engine Exceptions ######################################
+
+class ConfigurationFileNotAvailableError(ConfigurationError):
+    def __init__(self, msg="Configuration file is not found."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ConfigurationFileNotAvailableError({self.msg})>"
+
+class ConfigurationNotAvailableError(ConfigurationError):
+    def __init__(self, msg="Requested Configuration is not found."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ConfigurationNotAvailableError({self.msg})>"
+
+class ConfigurationExtractionError(ConfigurationError):
+    def __init__(self, msg="Configuration extraction process has failed."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ConfigurationExtractionError({self.msg})>"
 
 ###################################### Encryptor Engine Exceptions ######################################
 
