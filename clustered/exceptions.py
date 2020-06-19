@@ -81,6 +81,16 @@ class EncryptorNotPresentError(EncryptorError):
     def __repr__(self):
         return f"<EncryptorNotPresentError({self.msg})>"
 
+class EncryptorNotActiveError(EncryptorError):
+    def __init__(self, msg="Requested Encryptor is not active."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<EncryptorNotActiveError({self.msg})>"
+
 
 class EncryptorAlreadyExistsError(EncryptorError):
     def __init__(self, msg="Requested Encryptor already exists."):
@@ -105,6 +115,17 @@ class RepositoryNotPresentError(RepositoryError):
     
     def __repr__(self):
         return f"<RepositoryNotPresentError({self.msg})>"
+
+
+class RepositoryNotActiveError(RepositoryError):
+    def __init__(self, msg="Requested Repository is not Active."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<RepositoryNotActiveError({self.msg})>"
 
 
 class RepositoryAlreadyExistsError(RepositoryError):
