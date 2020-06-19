@@ -5,7 +5,7 @@ import os
 import sys
 import json
 import pathlib
-from ..exceptions import ConfigurationNotAvailableError
+from clustered.exceptions import ConfigurationNotAvailableError, ConfigurationFileNotAvailableError
 import traceback
 
 
@@ -13,19 +13,19 @@ import traceback
 class Engine:
 
     def env(self, config_file=''):
-        return EnvironmentConfiguration(config_file)
+        return EnvironmentConfiguration(config_file)()
     
     def repo(self, config_file=''):
-        return RepositoryConfiguration(config_file)
+        return RepositoryConfiguration(config_file)()
     
     def cluster(self, config_file=''):
-        return ClusterConfiguration(config_file)
+        return ClusterConfiguration(config_file)()
     
     def parent(self, config_file=''):
-        return ParentNodeConfiguration(config_file)
+        return ParentNodeConfiguration(config_file)()
 
     def child(self, config_file=''):
-        return ChildNodeConfiguration(config_file)
+        return ChildNodeConfiguration(config_file)()
 
 
 class Configuration:
@@ -68,8 +68,8 @@ class Configuration:
 
 
 class EnvironmentConfiguration(Configuration):
+    MANDATORY_CONFIG_KEY = ["DB_ENGINE", "DB_FILE"]
     def __init__(self, config_file = ''):
-        self.MANDATORY_CONFIG_KEY = ["DB_ENGINE", "DB_FILE"]
         self.config_file, self.configuration = self._get_config("ENVIRON_CONFIG_FILE", config_file, 'config/Environment_config.json')
 
         # Building Database URL
@@ -81,8 +81,8 @@ class EnvironmentConfiguration(Configuration):
 
 
 class RepositoryConfiguration(Configuration):
+    MANDATORY_CONFIG_KEY = ["CLOUD_TYPE"]
     def __init__(self, config_file = ''):
-        self.MANDATORY_CONFIG_KEY = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"]
         self.config_file, self.configuration = self._get_config("REPOSITORY_CONFIG_FILE", config_file, 'config/Repository_config.json')
 
     def __call__(self):
