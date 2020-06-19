@@ -49,7 +49,7 @@ def test_configuration_via_environemnt_declared_incomplete_file(incomplete_repos
     """ Testing repository configuration extraction from incomplete configuration file. """
     os.environ["CLUSTERED__REPOSITORY_CONFIG_FILE"] = incomplete_repository_configuration_file
     os.environ["CLUSTERED__CLOUD_TYPE"] = "AWS-ENV"
-    repo_config = engine.repo()
+    repo_config = engine.repo(refresh=True)
     assert list(repo_config.keys()) == RepositoryConfiguration.MANDATORY_CONFIG_KEY
     assert repo_config['CLOUD_TYPE'] == "AWS-ENV"
     os.environ["CLUSTERED__REPOSITORY_CONFIG_FILE"] = ""
@@ -57,7 +57,7 @@ def test_configuration_via_environemnt_declared_incomplete_file(incomplete_repos
 
 def test_configuration_via_default_file(default_repository_configuration_filename):
     """ Testing repository configuration extraction from default configuration file. """
-    repo_config = engine.repo()
+    repo_config = engine.repo(refresh=True)
     assert list(repo_config.keys()) == RepositoryConfiguration.MANDATORY_CONFIG_KEY
     assert repo_config['CLOUD_TYPE'] == "AWS-DEFAULT"
 
@@ -71,3 +71,11 @@ def test_configuration_not_available_error(incomplete_repository_configuration_f
     """ Testing raised exception if mandatory configurations are not present. """
     with pytest.raises(ConfigurationNotAvailableError):
         assert list(engine.repo(incomplete_repository_configuration_file).keys()) == RepositoryConfiguration.MANDATORY_CONFIG_KEY
+
+def test_singletone(repository_configuration_file):
+    repo_config_one = engine.repo(repository_configuration_file)
+    repo_config_two = engine.repo()
+    assert repo_config_one == repo_config_two
+    repo_config_three = engine.repo(refresh=True)
+    with pytest.raises(AssertionError):
+        assert repo_config_one == repo_config_three

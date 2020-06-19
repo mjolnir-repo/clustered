@@ -11,21 +11,42 @@ import traceback
 
 
 class Engine:
+    config_set = {}
 
-    def env(self, config_file=''):
-        return EnvironmentConfiguration(config_file)()
+    def env(self, config_file:str='', refresh:bool=False):
+        if refresh or config_file or (not Engine.config_set.get('ENV_CONFIG', None)):
+            Engine.config_set['ENV_CONFIG'] = env_config = EnvironmentConfiguration(config_file, refresh=refresh)()
+            return env_config
+        else:
+            return Engine.config_set['ENV_CONFIG']
     
-    def repo(self, config_file=''):
-        return RepositoryConfiguration(config_file)()
+    def repo(self, config_file:str='', refresh:bool=False):
+        if refresh or config_file or (not Engine.config_set.get('REPO_CONFIG', None)):
+            Engine.config_set['REPO_CONFIG'] = repo_config = RepositoryConfiguration(config_file, refresh=refresh)()
+            return repo_config
+        else:
+            return Engine.config_set['REPO_CONFIG']
     
-    def cluster(self, config_file=''):
-        return ClusterConfiguration(config_file)()
+    def cluster(self, config_file:str='', refresh:bool=False):
+        if refresh or config_file or (not Engine.config_set.get('CLUSTER_CONFIG', None)):
+            Engine.config_set['CLUSTER_CONFIG'] = cluster_config = ClusterConfiguration(config_file, refresh=refresh)()
+            return cluster_config
+        else:
+            return Engine.config_set['CLUSTER_CONFIG']
     
-    def parent(self, config_file=''):
-        return ParentNodeConfiguration(config_file)()
+    def parent(self, config_file:str='', refresh:bool=False):
+        if refresh or config_file or (not Engine.config_set.get('PARENT_NODE_CONFIG', None)):
+            Engine.config_set['PARENT_NODE_CONFIG'] = parent_node_config = ParentNodeConfiguration(config_file, refresh=refresh)()
+            return parent_node_config
+        else:
+            return Engine.config_set['PARENT_NODE_CONFIG']
 
-    def child(self, config_file=''):
-        return ChildNodeConfiguration(config_file)()
+    def child(self, config_file:str='', refresh:bool=False):
+        if refresh or config_file or (not Engine.config_set.get('CHILD_NODE_CONFIG', None)):
+            Engine.config_set['CHILD_NODE_CONFIG'] = child_node_config = ChildNodeConfiguration(config_file, refresh=refresh)()
+            return child_node_config
+        else:
+            return Engine.config_set['CHILD_NODE_CONFIG']
 
 
 class Configuration:
@@ -69,12 +90,20 @@ class Configuration:
 
 class EnvironmentConfiguration(Configuration):
     MANDATORY_CONFIG_KEY = ["DB_ENGINE", "DB_FILE"]
-    def __init__(self, config_file = ''):
-        self.config_file, self.configuration = self._get_config("ENVIRON_CONFIG_FILE", config_file, 'config/Environment_config.json')
+    CACHED_OBJ = None
 
+    def __new__(cls, config_file:str = '', refresh:bool = False):
+        if refresh or config_file or (not cls.CACHED_OBJ):
+            return super(EnvironmentConfiguration, cls).__new__(cls)
+        else:
+            return cls.CACHED_OBJ
+    
+    def __init__(self, config_file:str = '', refresh:bool = False):
+        self.config_file, self.configuration = self._get_config("ENVIRON_CONFIG_FILE", config_file, 'config/Environment_config.json')
         # Building Database URL
         if self.configuration['DB_ENGINE'].lower() == "sqlite":
             self.configuration['DATABASE_URL'] = 'sqlite:///{}'.format(self.configuration['DB_FILE'])
+        self.CACHED_OBJ = self
 
     def __call__(self):
         return self.configuration
@@ -82,78 +111,75 @@ class EnvironmentConfiguration(Configuration):
 
 class RepositoryConfiguration(Configuration):
     MANDATORY_CONFIG_KEY = ["CLOUD_TYPE"]
-    def __init__(self, config_file = ''):
+    CACHED_OBJ = None
+
+    def __new__(cls, config_file:str = '', refresh:bool = False):
+        if refresh or config_file or (not cls.CACHED_OBJ):
+            return super(RepositoryConfiguration, cls).__new__(cls)
+        else:
+            print('Using old object')
+            print(cls.CACHED_OBJ)
+            return cls.CACHED_OBJ
+
+    def __init__(self, config_file = '', refresh:bool = False):
         self.config_file, self.configuration = self._get_config("REPOSITORY_CONFIG_FILE", config_file, 'config/Repository_config.json')
+        RepositoryConfiguration.CACHED_OBJ = self
 
     def __call__(self):
         return self.configuration
 
 
 class ClusterConfiguration(Configuration):
-    def __init__(self, config_file = ''):
-        self.MANDATORY_CONFIG_KEY = []
+    MANDATORY_CONFIG_KEY = []
+    CACHED_OBJ = None
+
+    def __new__(cls, config_file:str = '', refresh:bool = False):
+        if refresh or config_file or (not cls.CACHED_OBJ):
+            return super(ClusterConfiguration, cls).__new__(cls)
+        else:
+            return cls.CACHED_OBJ
+    
+    def __init__(self, config_file = '', refresh:bool = False):
         self.config_file, self.configuration = self._get_config("CLUSTER_CONFIG_FILE", config_file, 'config/Cluster_config.json')
+        self.CACHED_OBJ = self
 
     def __call__(self):
         return self.configuration
 
 
 class ParentNodeConfiguration(Configuration):
-    def __init__(self, config_file = ''):
-        self.MANDATORY_CONFIG_KEY = []
+    MANDATORY_CONFIG_KEY = []
+    CACHED_OBJ = None
+
+    def __new__(cls, config_file:str = '', refresh:bool = False):
+        if refresh or config_file or (not cls.CACHED_OBJ):
+            return super(ParentNodeConfiguration, cls).__new__(cls)
+        else:
+            return cls.CACHED_OBJ
+    
+    def __init__(self, config_file = '', refresh:bool = False):
         self.config_file, self.configuration = self._get_config("PARENT_NODE_CONFIG_FILE", config_file, 'config/Parent_Node_config.json')
+        self.CACHED_OBJ = self
 
     def __call__(self):
         return self.configuration
 
 
 class ChildNodeConfiguration(Configuration):
-    def __init__(self, config_file = ''):
-        self.MANDATORY_CONFIG_KEY = []
+    MANDATORY_CONFIG_KEY = []
+    CACHED_OBJ = None
+
+    def __new__(cls, config_file:str = '', refresh:bool = False):
+        if refresh or config_file or (not cls.CACHED_OBJ):
+            return super(ChildNodeConfiguration, cls).__new__(cls)
+        else:
+            return cls.CACHED_OBJ
+    
+    def __init__(self, config_file = '', refresh:bool = False):
         self.config_file, self.configuration = self._get_config("CHILD_NODE_CONFIG_FILE", config_file, 'config/Child_Node_config.json')
+        self.CACHED_OBJ = self
 
     def __call__(self):
         return self.configuration
-
-
-# class EnvironmetConfiguration:
-#     def __init__(self):
-#         pass
-    
-#     @classmethod
-#     def _get_env_config(cls):
-#         app_path = os.environ.get('CLUSTERED_APP_PATH')
-#         env_file = app_path + '/clustered/config/Environment_Config.json'
-#         with open(env_file, 'r') as env_file_content:
-#             env_file_data = json.load(env_file_content)
-#         return (app_path, env_file, env_file_data)
-
-
-# class Environment:
-# 	def __init__(self):
-# 		self.APP_PATH, self.ENV_FILE, self.ENV_CONFIG = EnvironmetConfiguration._get_env_config()
-# 		self.AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
-# 		self.AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
-# 		self.AWS_DEFAULT_REGION = os.environ.get('AWS_DEFAULT_REGION', '')
-# 		self.CLUSTER_CONFIG_FILE = self.APP_PATH + '/clustered/config/Cluster_Config.json'
-# 		self.MASTER_NODE_CONFIG_FILE = self.APP_PATH + '/clustered/config/Master_Node_Config.json'
-# 		self.SLAVE_NODE_CONFIG_FILE = self.APP_PATH + '/clustered/config/Slave_Node_Config.json'
-
-# 	@property
-# 	def DATABASE_URL(self):
-# 		_db_list = self.ENV_CONFIG.get('DB', [])
-# 		if _db_list:
-# 			_active_db = {}
-# 			for _db in _db_list:
-# 				if _db.get('DB_ACTIVE_FLAG', 0):
-# 					_active_db = _db
-# 					break
-# 			else:
-# 				raise Exception("No Active database configuration is available in " + self.ENV_FILE)
-# 		else:
-# 			raise Exception("Database configuratoin is not present in " + self.ENV_FILE + " Please add the same or refer documentation.")
-# 		if _active_db.get('DB_ENGINE', 'sqlite').lower() == 'sqlite':
-# 			_db_file = _active_db.get('DB_DETAILS', {}).get('DB_FILE','clustered.db')
-# 			return f'sqlite:///{_db_file}'
 
 engine = Engine()

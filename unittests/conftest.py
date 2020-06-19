@@ -16,9 +16,9 @@ def _test_file_dir():
     yield ".test_bed"
     os.rmdir(_dir)
 
+
 ####################################################################################################
 ################################# Default Environment Configuration ################################
-
 @pytest.fixture(name="default_environment_configuration_filename", scope="module")
 def _default_environment_configuration_filename():
     """Test with default environment config file name."""
@@ -55,7 +55,6 @@ def _default_environment_configuration_file(default_environment_configuration_fi
 
 ####################################################################################################
 ################################# Default Repository Configuration #################################
-
 @pytest.fixture(name="default_repository_configuration_filename", scope="module")
 def _default_repository_configuration_filename():
     """Test with default repository config file name."""

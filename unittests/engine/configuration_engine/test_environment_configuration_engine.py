@@ -57,7 +57,7 @@ def test_configuration_via_environemnt_declared_incomplete_file(test_file_dir, i
     """ Testing configuration extraction from incomplete configuration file. """
     os.environ["CLUSTERED__ENVIRON_CONFIG_FILE"] = incomplete_environment_configuration_file
     os.environ["CLUSTERED__DB_FILE"] = os.path.join(test_file_dir, "incomplete_clustered.db")
-    env_config = engine.env()
+    env_config = engine.env(refresh=True)
     assert list(env_config.keys()) == EnvironmentConfiguration.MANDATORY_CONFIG_KEY + derived_configurations
     assert env_config['DB_FILE'] == os.path.join(test_file_dir, "incomplete_clustered.db")
     assert env_config['DATABASE_URL'] == 'sqlite:///{}'.format(env_config['DB_FILE'])
@@ -66,7 +66,7 @@ def test_configuration_via_environemnt_declared_incomplete_file(test_file_dir, i
 
 def test_configuration_via_default_file(test_file_dir, default_environment_configuration_filename, derived_configurations):
     """ Testing configuration extraction from default configuration file. """
-    env_config = engine.env()
+    env_config = engine.env(refresh=True)
     assert list(env_config.keys()) == EnvironmentConfiguration.MANDATORY_CONFIG_KEY + derived_configurations
     assert env_config['DB_FILE'] == os.path.join(test_file_dir, "default_clustered.db")
     assert env_config['DATABASE_URL'] == 'sqlite:///{}'.format(env_config['DB_FILE'])
@@ -75,3 +75,11 @@ def test_configuration_not_available_error(incomplete_environment_configuration_
     """ Testing configuration extraction from default configuration file. """
     with pytest.raises(ConfigurationNotAvailableError):
         assert list(engine.env(incomplete_environment_configuration_file).keys()) == EnvironmentConfiguration.MANDATORY_CONFIG_KEY + derived_configurations
+
+def test_singletone(repository_configuration_file):
+    repo_config_one = engine.repo(repository_configuration_file)
+    repo_config_two = engine.repo()
+    assert repo_config_one == repo_config_two
+    repo_config_three = engine.repo(refresh=True)
+    with pytest.raises(AssertionError):
+        assert repo_config_one == repo_config_three
