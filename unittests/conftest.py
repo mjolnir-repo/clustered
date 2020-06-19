@@ -1,9 +1,8 @@
 import pytest
-import json
 import os
-import sys
 import traceback
-
+import sys
+import json
 
 @pytest.yield_fixture(name="test_file_dir", scope="module")
 def _test_file_dir():
@@ -18,7 +17,8 @@ def _test_file_dir():
     os.rmdir(_dir)
 
 
-############################## Engine :: Configuration Engine :: Environment Configuration ##############################
+####################################################################################################
+################################# Default Environment Configuration ################################
 @pytest.fixture(name="default_environment_configuration_filename", scope="module")
 def _default_environment_configuration_filename():
     """Test with default environment config file name."""
@@ -29,7 +29,7 @@ def _default_environment_configuration(test_file_dir):
     """Test default environment config."""
     return {
         "DB_ENGINE": "sqlite",
-        "DB_FILE": os.path.join(test_file_dir, "default_clustered.db"),
+        "DB_FILE": os.path.join(test_file_dir, "default_clustered.db")
     }
 
 @pytest.yield_fixture(name="default_environment_configuration_file", scope="module", autouse=True)
@@ -53,8 +53,8 @@ def _default_environment_configuration_file(default_environment_configuration_fi
         print("~" * 100)
         assert False
 
-
-############################## Engine :: Configuration Engine :: Repository Configuration ##############################
+####################################################################################################
+################################# Default Repository Configuration #################################
 @pytest.fixture(name="default_repository_configuration_filename", scope="module")
 def _default_repository_configuration_filename():
     """Test with default repository config file name."""
