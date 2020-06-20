@@ -48,7 +48,9 @@ def test_get_active_encryptors(db_engine):
 
 def test_recover_encryptor_by_name(db_engine, second_encryptor_name):
     with pytest.raises(TypeError):
-        db_engine.recover_encryptor_by_name()    
+        db_engine.recover_encryptor_by_name()
+    with pytest.raises(EncryptorNotActiveError):
+        db_engine.get_encryptor_by_name(second_encryptor_name, True)
     db_engine.recover_encryptor_by_name(second_encryptor_name)
     encryptor = db_engine.get_encryptor_by_name(second_encryptor_name)
     assert encryptor.ENC_ACTIVE_FLAG == 'Y'
