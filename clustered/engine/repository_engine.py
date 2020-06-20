@@ -42,9 +42,9 @@ class RepositoryEngine:
             ]
 
     @staticmethod
-    def delete_repository(repo_name:str) -> None:
+    def delete_repository(repo_name:str, hard:bool) -> None:
         #TO DO: Write all AWS related Code here.
-        db_engine.delete_repository_by_name(repo_name)
+        db_engine.delete_repository_by_name(repo_name, hard)
 
 
     @staticmethod
