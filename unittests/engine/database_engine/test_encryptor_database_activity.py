@@ -4,8 +4,7 @@ import traceback
 import sys
 import os
 from clustered.models import Encryptor
-from clustered.exceptions import EncryptorNotPresentError, EncryptorNotActiveError, EncryptorAlreadyExistsError, WrongActionInvocationError, RepositoryNotPresentError, RepositoryNotActiveError, RepositoryAlreadyExistsError, EncryptorNotPresentError
-
+from clustered.exceptions import EncryptorNotPresentError, EncryptorNotActiveError, EncryptorAlreadyExistsError, WrongActionInvocationError
 
 
 def test_add_encryptor(db_engine, first_encryptor_name, second_encryptor_name):
