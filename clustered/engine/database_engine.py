@@ -10,9 +10,9 @@ from clustered.engine.configuration_engine import engine as conf_engine
 
 
 class DatabaseEngine:
-    def __init__(self):
-        env = conf_engine.env()
-        self.engine = create_engine(env.DATABASE_URL)
+    def __init__(self, config_file:str=''):
+        env = conf_engine.env(config_file)
+        self.engine = create_engine(env['DATABASE_URL'])
 
     # DB session builder
     @contextmanager
@@ -22,10 +22,10 @@ class DatabaseEngine:
         try:
             yield session
         except Exception as e:
-            print("ERROR: Exception occured while database session was open.")
-            print(str(e))
+            # print("ERROR: Exception occured while database session was open.")
+            # print(str(e))
             session.rollback()
-            sys.exit(1)
+            raise e
         else:
             # print("INFO: Database operations completed successfully.")
             session.commit()
@@ -91,22 +91,27 @@ class DatabaseEngine:
             raise EncryptorNotPresentError()
 
     def delete_encryptor_by_name(self, enc_name:str) -> None:
-        enc_obj = self.get_encryptor_by_name(enc_name)
-        enc_obj.ENC_ACTIVE_FLAG = 'N'
+        with self.session_scope() as sess:
+            enc_obj = self.get_encryptor_by_name(enc_name)
+            enc_obj.ENC_ACTIVE_FLAG = 'N'
+            sess.add(enc_obj)
 
     def recover_encryptor_by_name(self, enc_name:str) -> None:
-        enc_obj = self.get_encryptor_by_name(enc_name)
-        if enc_obj.ENC_ACTIVE_FLAG == 'Y':
-            raise WrongActionInvocationError(f"Encryptor<'{enc_name}'> is already Active.")
-        enc_obj.ENC_ACTIVE_FLAG = 'Y'
+        with self.session_scope() as sess:
+            enc_obj = self.get_encryptor_by_name(enc_name)
+            if enc_obj.ENC_ACTIVE_FLAG == 'Y':
+                raise WrongActionInvocationError(f"Encryptor<'{enc_name}'> is already Active.")
+            else:
+                enc_obj.ENC_ACTIVE_FLAG = 'Y'
+                sess.add(enc_obj)
 
-    def clean_up_inactive_encryptors() -> None:
+    def clean_up_inactive_encryptors(self) -> None:
         with self.session_scope() as session:
             session.query(Encryptor)\
                 .filter(Encryptor.ENC_ACTIVE_FLAG == 'N')\
                 .delete(synchronize_session=False)
 
-    def clean_up_all_encryptors() -> None:
+    def clean_up_all_encryptors(self) -> None:
         with self.session_scope() as session:
             session.query(Encryptor)\
                 .delete(synchronize_session=False)
@@ -187,4 +192,4 @@ class DatabaseEngine:
             session.query(Repository)\
                 .delete(synchronize_session=False)
 
-db_engine = DatabaseEngine()
+# db_engine = DatabaseEngine()

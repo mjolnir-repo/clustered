@@ -16,6 +16,17 @@ def _test_file_dir():
     yield ".test_bed"
     os.rmdir(_dir)
 
+@pytest.yield_fixture(name="test_database_file", scope="module")
+def _test_database_file(test_file_dir):
+    """
+        Creating database file which wil be used through out testing.
+        The file will be removed as part of teardown process, once tests are completed.
+    """
+    db_file = os.path.join(test_file_dir, "default_clustered.db") 
+    with open(db_file, 'w') as fp: 
+        pass
+    yield db_file
+    os.remove(db_file)
 
 ####################################################################################################
 ################################# Default Environment Configuration ################################
@@ -25,11 +36,11 @@ def _default_environment_configuration_filename():
     return 'Environment_Config.json'
 
 @pytest.fixture(name="default_environment_configuration", scope="module")
-def _default_environment_configuration(test_file_dir):
+def _default_environment_configuration(test_database_file):
     """Test default environment config."""
     return {
         "DB_ENGINE": "sqlite",
-        "DB_FILE": os.path.join(test_file_dir, "default_clustered.db")
+        "DB_FILE": test_database_file
     }
 
 @pytest.yield_fixture(name="default_environment_configuration_file", scope="module", autouse=True)
@@ -42,7 +53,7 @@ def _default_environment_configuration_file(default_environment_configuration_fi
         _dir = "config"
         if not os.path.exists(_dir):
             os.mkdir(_dir)
-        default_environment_configuration_file = os.path.join("config", default_environment_configuration_filename)
+        default_environment_configuration_file = os.path.join(_dir, default_environment_configuration_filename)
         with open(default_environment_configuration_file, 'w') as f:
             json.dump(default_environment_configuration, f)
         yield default_environment_configuration_file
@@ -77,7 +88,7 @@ def _default_repository_configuration_file(default_repository_configuration_file
         _dir = "config"
         if not os.path.exists(_dir):
             os.mkdir(_dir)
-        default_repository_configuration_file = os.path.join("config", default_repository_configuration_filename)
+        default_repository_configuration_file = os.path.join(_dir, default_repository_configuration_filename)
         with open(default_repository_configuration_file, 'w') as f:
             json.dump(default_repository_configuration, f)
         yield default_repository_configuration_file
