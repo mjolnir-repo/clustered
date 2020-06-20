@@ -10,9 +10,9 @@ from clustered.engine.configuration_engine import engine as conf_engine
 
 
 class DatabaseEngine:
-    def __init__(self):
-        env = conf_engine.env()
-        self.engine = create_engine(env.DATABASE_URL)
+    def __init__(self, config_file:str=''):
+        env = conf_engine.env(config_file)
+        self.engine = create_engine(env['DATABASE_URL'])
 
     # DB session builder
     @contextmanager
@@ -22,10 +22,10 @@ class DatabaseEngine:
         try:
             yield session
         except Exception as e:
-            print("ERROR: Exception occured while database session was open.")
-            print(str(e))
+            # print("ERROR: Exception occured while database session was open.")
+            # print(str(e))
             session.rollback()
-            sys.exit(1)
+            raise e
         else:
             # print("INFO: Database operations completed successfully.")
             session.commit()
@@ -42,7 +42,7 @@ class DatabaseEngine:
         pass
 
     # Encryptor related DB activity
-    def add_encryptor(self, enc_name:str) -> None:
+    def add_encryptor(self, enc_name:str) -> Encryptor:
         try:
             with self.session_scope() as session:
                 enc_obj = Encryptor(
@@ -51,6 +51,7 @@ class DatabaseEngine:
                     ENC_ACTIVE_FLAG = 'Y'
                 )
                 session.add(enc_obj)
+            return self.get_encryptor_by_name(enc_name)
         except exc.IntegrityError as e:
             raise EncryptorAlreadyExistsError()
 
@@ -62,7 +63,7 @@ class DatabaseEngine:
                 )\
                 .first()
         if encryptor:
-            if active_check_flag and Encryptor.ENC_ACTIVE_FLAG != 'Y':
+            if active_check_flag and encryptor.ENC_ACTIVE_FLAG != 'Y':
                 raise EncryptorNotActiveError(f"Encryptor<'{enc_name}'> is not in ACTIVE state. Recover the encryptor before using it, or use another one.")
             else:
                 return encryptor
@@ -90,23 +91,31 @@ class DatabaseEngine:
         else:
             raise EncryptorNotPresentError()
 
-    def delete_encryptor_by_name(self, enc_name:str) -> None:
-        enc_obj = self.get_encryptor_by_name(enc_name)
-        enc_obj.ENC_ACTIVE_FLAG = 'N'
+    def delete_encryptor_by_name(self, enc_name:str, hard:bool = False) -> None:
+        with self.session_scope() as sess:
+            enc_obj = self.get_encryptor_by_name(enc_name)
+            if hard:
+                sess.delete(enc_obj)
+            else:
+                enc_obj.ENC_ACTIVE_FLAG = 'N'
+                sess.add(enc_obj)
 
     def recover_encryptor_by_name(self, enc_name:str) -> None:
-        enc_obj = self.get_encryptor_by_name(enc_name)
-        if enc_obj.ENC_ACTIVE_FLAG == 'Y':
-            raise WrongActionInvocationError(f"Encryptor<'{enc_name}'> is already Active.")
-        enc_obj.ENC_ACTIVE_FLAG = 'Y'
+        with self.session_scope() as sess:
+            enc_obj = self.get_encryptor_by_name(enc_name)
+            if enc_obj.ENC_ACTIVE_FLAG == 'Y':
+                raise WrongActionInvocationError(f"Encryptor<'{enc_name}'> is already Active.")
+            else:
+                enc_obj.ENC_ACTIVE_FLAG = 'Y'
+                sess.add(enc_obj)
 
-    def clean_up_inactive_encryptors() -> None:
+    def clean_up_inactive_encryptors(self) -> None:
         with self.session_scope() as session:
             session.query(Encryptor)\
                 .filter(Encryptor.ENC_ACTIVE_FLAG == 'N')\
                 .delete(synchronize_session=False)
 
-    def clean_up_all_encryptors() -> None:
+    def clean_up_all_encryptors(self) -> None:
         with self.session_scope() as session:
             session.query(Encryptor)\
                 .delete(synchronize_session=False)
@@ -128,7 +137,7 @@ class DatabaseEngine:
                     ENCRYPTOR = enc_obj
                 )
                 session.add(repo_obj)
-            return True
+            return self.get_repository_by_name(repo_name)
         except exc.IntegrityError as e:
             raise RepositoryAlreadyExistsError()
 
@@ -141,7 +150,7 @@ class DatabaseEngine:
                 .first()
             if not repository:
                 raise RepositoryNotPresentError()
-            elif Repository.REPO_ACTIVE_FLAG != 'Y':
+            elif active_check_flag and repository.REPO_ACTIVE_FLAG != 'Y':
                 raise RepositoryNotActiveError(f"Repository<'{repo_name}'> is not in ACTIVE state. Recover the repostory before using it, or use another one.")
             return repository
 
@@ -166,25 +175,33 @@ class DatabaseEngine:
         else:
             raise RepositoryNotPresentError()
 
-    def delete_repository_by_name(self, repo_name:str) -> None:
-        repo_obj = self.get_repository_by_name(repo_name)
-        repo_obj.REPO_ACTIVE_FLAG = 'N'
+    def delete_repository_by_name(self, repo_name:str, hard:bool = False) -> None:
+        with self.session_scope() as sess:
+            repo_obj = self.get_repository_by_name(repo_name)
+            if hard:
+                sess.delete(repo_obj)
+            else:
+                repo_obj.REPO_ACTIVE_FLAG = 'N'
+                sess.add(repo_obj)
 
     def recover_repository_by_name(self, repo_name:str) -> None:
-        repo_obj = self.get_repository_by_name(repo_name)
-        if repo_obj.REPO_ACTIVE_FLAG == 'Y':
-            raise WrongActionInvocationError(f"Repository<'{repo_name}'> is already Active.")
-        repo_obj.REPO_ACTIVE_FLAG = 'Y'
+        with self.session_scope() as sess:
+            repo_obj = self.get_repository_by_name(repo_name)
+            if repo_obj.REPO_ACTIVE_FLAG == 'Y':
+                raise WrongActionInvocationError(f"Repository<'{repo_name}'> is already Active.")
+            else:
+                repo_obj.REPO_ACTIVE_FLAG = 'Y'
+                sess.add(repo_obj)
 
-    def clean_up_inactive_repositories() -> None:
-        with db_obj.session_scope() as session:
+    def clean_up_inactive_repositories(self) -> None:
+        with self.session_scope() as session:
             session.query(Repository)\
                 .filter(Repository.REPO_ACTIVE_FLAG == 'N')\
                 .delete(synchronize_session=False)
 
-    def clean_up_all_repositories() -> None:
-        with db_obj.session_scope() as session:
+    def clean_up_all_repositories(self) -> None:
+        with self.session_scope() as session:
             session.query(Repository)\
                 .delete(synchronize_session=False)
 
-db_engine = DatabaseEngine()
+# db_engine = DatabaseEngine()
