@@ -1,4 +1,13 @@
 {
-    "DB_ENGINE": "sqlite",
-    "DB_FILE": "/Volumes/WorkSpace/POC/SparkClusterEC2/sparkclusteronaws/clustered/database/clustered.db"
+    "DB_CONFIG": {
+        "DB_ENGINE": "sqlite",
+        "DB_FILE": "/Volumes/WorkSpace/POC/SparkClusterEC2/sparkclusteronaws/clustered/database/clustered.db"
+    },
+    "USER_CONFIG": [
+        {
+            "USER_NAME": "clustered_saumalya",
+            "PASSWORD": "clustered_password",
+            "ADMIN_FLAG": "Y"
+        }
+    ]
 }

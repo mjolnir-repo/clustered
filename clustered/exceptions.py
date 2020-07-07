@@ -1,20 +1,37 @@
 class Error(Exception):
     pass
 
+
 class ConfigurationError(Error):
     pass
+
 
 class EncryptorError(Error):
     pass
 
+
 class RepositoryError(Error):
     pass
+
 
 class ClusterError(Error):
     pass
 
+
 class NodeError(Error):
     pass
+
+
+class UnexpectedSystemError(Error):
+    def __init__(self, msg="Something gone wrong un-expectedly. Contact Administrator."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<UnexpectedSystemError({self.msg})>"
+
 
 class UnavailableActionError(Error):
     def __init__(self, msg="Requested action is not available."):
@@ -25,6 +42,7 @@ class UnavailableActionError(Error):
     
     def __repr__(self):
         return f"<UnavailableActionError({self.msg})>"
+
 
 class WrongActionInvocationError(Error):
     def __init__(self, msg="Requested action can not be invoked in the current state."):
@@ -37,7 +55,77 @@ class WrongActionInvocationError(Error):
         return f"<WrongActionInvocationError({self.msg})>"
 
 
+###################################### Application Engine Exceptions ######################################
+
+
+class ApplicationAlreadyInitiatedError(ConfigurationError):
+    def __init__(self, msg="Clustered application is already initiated for this user. To make any changes to existing configuration run `clustered refresh`."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ApplicationAlreadyInitiatedError({self.msg})>"
+
+
+class ApplicationNotInitiatedError(ConfigurationError):
+    def __init__(self, msg="Clustered application is not initiated yet for this user. To initiate execute `clustered init`."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ApplicationNotInitiatedError({self.msg})>"
+
+
+class ApplicationWorkspaceBuildingError(ConfigurationError):
+    def __init__(self, msg="Clustered application workspace could not be built succesfully."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ApplicationWorkspaceBuildingError({self.msg})>"
+
+
+class ApplicationDatabaseSetupError(ConfigurationError):
+    def __init__(self, msg="Application meta-database could not be initiated properly."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ApplicationDatabaseSetupError({self.msg})>"
+
+
+class ApplicationDatabaseCleanupError(ConfigurationError):
+    def __init__(self, msg="Application meta-database is not purged properly."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ApplicationDatabaseCleanupError({self.msg})>"
+
+
+class ApplicationDatabaseUnsupportedError(ConfigurationError):
+    def __init__(self, msg="Provided database type is not yet supported to be clustered meta-database."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ApplicationDatabaseUnsupportedError({self.msg})>"
+
+
 ###################################### Configuration Engine Exceptions ######################################
+
 
 class ConfigurationFileNotAvailableError(ConfigurationError):
     def __init__(self, msg="Configuration file is not found."):
@@ -49,6 +137,7 @@ class ConfigurationFileNotAvailableError(ConfigurationError):
     def __repr__(self):
         return f"<ConfigurationFileNotAvailableError({self.msg})>"
 
+
 class ConfigurationNotAvailableError(ConfigurationError):
     def __init__(self, msg="Requested Configuration is not found."):
         self.msg = msg
@@ -58,6 +147,18 @@ class ConfigurationNotAvailableError(ConfigurationError):
     
     def __repr__(self):
         return f"<ConfigurationNotAvailableError({self.msg})>"
+
+
+class ConfigurationInitiationError(ConfigurationError):
+    def __init__(self, msg="Configuration initiation process has failed."):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+    
+    def __repr__(self):
+        return f"<ConfigurationInitiationError({self.msg})>"
+
 
 class ConfigurationExtractionError(ConfigurationError):
     def __init__(self, msg="Configuration extraction process has failed."):
@@ -69,7 +170,9 @@ class ConfigurationExtractionError(ConfigurationError):
     def __repr__(self):
         return f"<ConfigurationExtractionError({self.msg})>"
 
+
 ###################################### Encryptor Engine Exceptions ######################################
+
 
 class EncryptorNotPresentError(EncryptorError):
     def __init__(self, msg="Requested Encryptor is not found."):
@@ -80,6 +183,7 @@ class EncryptorNotPresentError(EncryptorError):
     
     def __repr__(self):
         return f"<EncryptorNotPresentError({self.msg})>"
+
 
 class EncryptorNotActiveError(EncryptorError):
     def __init__(self, msg="Requested Encryptor is not active."):

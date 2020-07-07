@@ -10,9 +10,10 @@ from clustered.engine.configuration_engine import engine as conf_engine
 
 
 class DatabaseEngine:
-    def __init__(self, config_file:str=''):
-        env = conf_engine.env(config_file)
-        self.engine = create_engine(env['DATABASE_URL'])
+    def __init__(self):
+        env_obj = conf_engine.env()
+        env_config = env_obj()
+        self.engine = create_engine(env_obj.database_url_builder(env_config))
 
     # DB session builder
     @contextmanager
