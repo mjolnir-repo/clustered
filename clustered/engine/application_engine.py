@@ -18,6 +18,7 @@ from clustered.engine.base_engine import ApplicationBase
 from clustered.exceptions import ApplicationAlreadyInitiatedError,\
                                     ApplicationNotInitiatedError,\
                                     ApplicationWorkspaceBuildingError,\
+                                    ApplicationDatabaseSetupError, \
                                     ApplicationDatabaseUnsupportedError,\
                                     ConfigurationFileNotAvailableError,\
                                     ConfigurationNotAvailableError,\
@@ -41,9 +42,10 @@ class ApplicationEngine(ApplicationBase):
                 raise ConfigurationFileNotAvailableError(f"Declared Configuration file - '{config_file.as_posix()}' is not available.")
         elif backup_config_file:
             backup_config_file = pathlib.Path(backup_config_file)
-            if not backup_config_file.is_file():
-                raise ConfigurationFileNotAvailableError(f"Provided Configuration file - '{backup_config_file.as_posix()}' is not available.")
-            config_file = backup_config_file
+            if backup_config_file.is_file():
+                config_file = backup_config_file
+            elif attr == "ENVIRON_CONFIG":
+                raise ConfigurationFileNotAvailableError(f"Backup Configuration file - '{backup_config_file.as_posix()}' is not available.")
         elif isinit and attr == "ENVIRON_CONFIG":
             raise ConfigurationFileNotAvailableError(f"Environment Configuration file must be provided while initiating the application, possible options to provide the same are \n1. use '-env_config' option while executing the command,\n2. Declare CLUSTERED__ENVIRON_CONFIG_FILE in environment,\n3. Provide '{backup_config_file}' relative to execution directory.")
         else:
@@ -105,23 +107,29 @@ class ApplicationEngine(ApplicationBase):
     #         raise ApplicationDatabaseCleanupError()
 
     def initiate(self, **kwargs) -> None:
-        wrkspc = self._setup_wrkspc()
-        env_config = self._get_config("ENVIRON_CONFIG", kwargs.get('env_config_file', ''), 'config/Environment_config.json', True)
-        self._build_configuration(wrkspc, "ENVIRON_CONFIG", env_config)
-        repo_config = self._get_config("REPOSITORY_CONFIG", kwargs.get('repo_config_file', ''), 'config/Repository_config.json', True)
-        if repo_config:
-            self._build_configuration(wrkspc, "REPOSITORY_CONFIG", repo_config)
-        clus_config = self._get_config("CLUSTER_CONFIG", kwargs.get('clus_config_file', ''), 'config/Cluster_config.json', True)
-        if clus_config:
-            self._build_configuration(wrkspc, "CLUSTER_CONFIG", clus_config)
-        pnode_config = self._get_config("PARENT_NODE_CONFIG", kwargs.get('pnode_config_file', ''), 'config/Parenet_Node_config.json', True)
-        if pnode_config:
-            self._build_configuration(wrkspc, "PARENT_NODE_CONFIG", pnode_config)
-        cnode_config = self._get_config("CHILD_NODE_CONFIG", kwargs.get('cnode_config_file', ''), 'config/Child_Node_config.json', True)
-        if cnode_config:
-            self._build_configuration(wrkspc, "CHILD_NODE_CONFIG", cnode_config)
-        self._setup_meta_db()
-        return True
+        try:
+            wrkspc = self._setup_wrkspc()
+            env_config = self._get_config("ENVIRON_CONFIG", kwargs.get('env_config_file', ''), 'config/Environment_config.json', True)
+            self._build_configuration(wrkspc, "ENVIRON_CONFIG", env_config)
+            repo_config = self._get_config("REPOSITORY_CONFIG", kwargs.get('repo_config_file', ''), 'config/Repository_config.json', True)
+            if repo_config:
+                self._build_configuration(wrkspc, "REPOSITORY_CONFIG", repo_config)
+            clus_config = self._get_config("CLUSTER_CONFIG", kwargs.get('clus_config_file', ''), 'config/Cluster_config.json', True)
+            if clus_config:
+                self._build_configuration(wrkspc, "CLUSTER_CONFIG", clus_config)
+            pnode_config = self._get_config("PARENT_NODE_CONFIG", kwargs.get('pnode_config_file', ''), 'config/Parenet_Node_config.json', True)
+            if pnode_config:
+                self._build_configuration(wrkspc, "PARENT_NODE_CONFIG", pnode_config)
+            cnode_config = self._get_config("CHILD_NODE_CONFIG", kwargs.get('cnode_config_file', ''), 'config/Child_Node_config.json', True)
+            if cnode_config:
+                self._build_configuration(wrkspc, "CHILD_NODE_CONFIG", cnode_config)
+            self._setup_meta_db()
+            return True
+        except Exception as e:
+            if self.isinitiated():
+                wrkspc = self._get_wrkspc()
+                shutil.rmtree(wrkspc.as_posix())
+            raise(e)
 
     def refresh(self, **kwargs) -> None:
         self.isinitiated()
@@ -146,7 +154,7 @@ class ApplicationEngine(ApplicationBase):
             wrkspc = self._get_wrkspc()
             config_file = wrkspc / (".ENVIRON_CONFIG.pkl")
             if not config_file.is_file():
-                raise ConfigurationFileNotAvailableError(f"{attr} type Configuration file is not available in the system. Either provide configuration file while executing the command or use methods to configure the same in the system.")
+                raise ConfigurationFileNotAvailableError(f"Environment Configuration file {config_file.as_posix()} is not available in the system. Either provide configuration file while executing the command or use methods to configure the same in the system.")
             env_config = self._get_config("ENVIRON_CONFIG", config_file)
             if env_config['DB_CONFIG']['DB_ENGINE'].lower() == 'sqlite':
                 pathlib.Path(env_config['DB_CONFIG']['DB_FILE']).unlink()
