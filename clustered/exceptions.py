@@ -92,7 +92,7 @@ class ApplicationWorkspaceBuildingError(ConfigurationError):
 
 
 class ApplicationDatabaseSetupError(ConfigurationError):
-    def __init__(self, msg="Application meta-database could not be initiated properly."):
+    def __init__(self, msg="Application meta-database could not be initiated properly. Check for traceback."):
         self.msg = msg
 
     def __str__(self):

@@ -222,12 +222,20 @@ def test_check_for_mandatory_config(mocker, attr, key, app_base_obj, dummy_good_
 ])
 def test_get_config(mocker, attr, config_file, app_base_obj, dummy_good_config_data):
     mocker.patch.object(app_base_obj, "_get_config_file", return_value=pathlib.Path(config_file))
-    mocker.patch.object(app_base_obj, "_check_for_mandatory_config", return_value=(True, {}))
+    mocker.patch.object(app_base_obj, "_check_for_mandatory_config", return_value=(True, {'a': 1}))
     get_file_config_spy = mocker.spy(app_base_obj, "_get_config_file")
     check_for_mandatory_config_spy = mocker.spy(app_base_obj, "_check_for_mandatory_config")
-    assert app_base_obj._get_config(attr, config_file) == (True, {})
+    assert app_base_obj._get_config(attr, config_file) == {'a': 1}
     get_file_config_spy.assert_called_once_with(attr, config_file, "", False)
     check_for_mandatory_config_spy.assert_called_once_with(attr, config_file)
+
+@pytest.mark.parametrize("attr, config_file", [
+    ('ENVIRON_CONFIG', 'env_config_file.json'),
+    ('REPOSITORY_CONFIG', 'repository_config_file.json')
+])
+def test_get_config_config_file_not_available(mocker, attr, config_file, app_base_obj):
+    mocker.patch.object(app_base_obj, "_get_config_file", return_value=False)
+    assert app_base_obj._get_config(attr, config_file) == {}
 
 def test_database_url_builder(app_base_obj):
     env_config = {'DB_CONFIG': {'DB_ENGINE': 'sqlite', 'DB_FILE': 'some/random/db/file.db'}}

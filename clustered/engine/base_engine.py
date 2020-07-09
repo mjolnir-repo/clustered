@@ -1,5 +1,6 @@
 import sys
 import json
+import pickle
 import typing
 import pathlib
 import traceback
@@ -108,8 +109,12 @@ class ApplicationBase:
         if attr == "CHILD_NODE_CONFIG":
             mandatory_config_keys = self.MANDATORY_CHILD_NODE_CONFIG_KEYS
         
-        with open(config_file, 'r') as cf:
-            config_data = json.load(cf)
+        if pathlib.Path(config_file).suffix == ".json":
+            with open(config_file, 'r') as cf:
+                config_data = json.load(cf)
+        else:
+            with open(config_file, 'rb') as cf:
+                config_data = pickle.load(cf)
         result = self._recursive_key_checker(mandatory_config_keys, config_data)
         if not result[0]:
             raise ConfigurationNotAvailableError(f"Mandatory Configuration key - " + result[1] + " is not available.")
@@ -122,7 +127,7 @@ class ApplicationBase:
         config_file = self._get_config_file(attr, config_file, backup_config_file, isinit)
         if config_file:
             config_data = self._check_for_mandatory_config(attr, config_file.as_posix())
-            return config_data
+            return config_data[1]
         else:
             return {}
 
