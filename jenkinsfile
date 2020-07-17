@@ -11,7 +11,7 @@ pipeline{
     stage('test')
     {
       steps{
-        sh 'python test.py'
+        sh 'python spark_cluster_stop.ipynb'
       }   
     }
   }
