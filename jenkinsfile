@@ -6,7 +6,7 @@ pipeline{
     {
       steps{
         sh 'pip install --upgrade --user pip'
-        sh 'pip install --user -r requirements.txt'
+        sh 'pip install --upgrade --user -r requirements.txt'
       }
     }
     stage('test')
